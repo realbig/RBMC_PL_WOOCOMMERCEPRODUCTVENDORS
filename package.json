@@ -1,0 +1,15 @@
+{
+  "name": "WCVendorModifications",
+  "description": "Modifies the WooCommerce Product Vendors plugin to work with hierarchical commissions.",
+  "repository": "https://github.com/realbig/RBMC_PL_WOOCOMMERCEPRODUCTVENDORS",
+  "version": "0.1.0",
+  "devDependencies": {
+    "grunt": "~0.4",
+    "grunt-contrib-uglify": "~0.6",
+    "grunt-sass": "~0.17",
+    "grunt-autoprefixer": "~1.0",
+    "grunt-contrib-watch": "~0.6",
+    "grunt-notify": "~0.4",
+    "matchdep": "~0.3"
+  }
+}
