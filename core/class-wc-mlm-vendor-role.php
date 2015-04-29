@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die();
 }
 
-class WCMLM_Vendor_Role {
+class WC_MLM_Vendor_Role {
 
 	public $vendor_role_exists = false;
 
@@ -48,7 +48,13 @@ class WCMLM_Vendor_Role {
 	}
 
 	function _add_user_vendor_fields( $user ) {
+
+		// Only add these settings for Vendors
+		if ( ! in_array( 'vendor', $user->roles ) ) {
+			return;
+		}
 		?>
+
 		<h3>Vendor Settings</h3>
 
 		<table class="form-table">
@@ -68,7 +74,7 @@ class WCMLM_Vendor_Role {
 					if ( ! empty( $vendors ) ) {
 						?>
 						<select id="_vendor_parent" name="_vendor_parent">
-							<option>- No Parent -</option>
+							<option value="">- No Parent -</option>
 							<?php
 							foreach( $vendors as $vendor ) {
 
@@ -96,11 +102,68 @@ class WCMLM_Vendor_Role {
 
 		foreach ( $this->meta_fields as $meta ) {
 
-			if ( isset( $_POST[ $meta ] ) ) {
+			// Update parent's meta to reflect the child
+			if ( $meta == '_vendor_parent' ) {
+
+				if ( isset( $_POST['_vendor_parent'] ) && ! empty( $_POST[ $meta ] ) ) {
+					update_user_meta( $_POST['_vendor_parent'], '_vendor_child', $user_ID );
+				} else {
+
+					if ( $current_parent = get_user_meta( $user_ID, '_vendor_parent', true ) ) {
+						delete_user_meta( $current_parent, '_vendor_child' );
+					}
+				}
+			}
+
+			if ( isset( $_POST[ $meta ] ) && ! empty( $_POST[ $meta ] ) ) {
 				update_user_meta( $user_ID, $meta, $_POST[ $meta ] );
 			} else {
 				delete_user_meta( $user_ID, $meta );
 			}
 		}
+	}
+
+	public function get_child( $user_ID ) {
+
+		$child = get_user_meta( $user_ID, '_vendor_child', true );
+
+		if ( empty( $child ) ) {
+			return false;
+		}
+
+		return $child;
+	}
+
+	public function get_parent( $user_ID ) {
+
+		$parent = get_user_meta( $user_ID, '_vendor_parent', true );
+
+		if ( empty( $parent ) ) {
+			return false;
+		}
+
+		return $parent;
+	}
+
+	public function get_ancestors( $user_ID ) {
+
+		$ancestors = array();
+
+		while ( $user_ID = get_user_meta( $user_ID, '_vendor_parent', true ) ) {
+			$ancestors[] = $user_ID;
+		}
+
+		return ! empty( $ancestors ) ? $ancestors : false;
+	}
+
+	public function get_descendants( $user_ID ) {
+
+		$descendants = array();
+
+		while ( $user_ID = get_user_meta( $user_ID, '_vendor_child', true ) ) {
+			$descendants[] = $user_ID;
+		}
+
+		return ! empty( $descendants ) ? $descendants : false;
 	}
 }

@@ -1,22 +1,22 @@
 <?php
 /*
- * Plugin Name: WooCommerce Vendor Modifications
- * Description: Modifies the WooCommerce Product Vendors plugin to work with hierarchical commissions.
+ * Plugin Name: WooCommerce MLM
+ * Description: Adds a multi-level-marketing strategy into WooCommerce for reporting purposes.
  * Author: Real Big Marketing
  * Author URI: http://realbigmarketing.com
  * Version: 0.1.0
  */
 
-define( 'WC_VENDOR_MODIFICATIONS_VERSION', '0.1.0' );
-define( 'WC_VENDOR_MODIFICATIONS_PATH', plugin_dir_path( __FILE__ ) );
-define( 'WC_VENDOR_MODIFICATIONS_URL', plugins_url( '', __FILE__ ) );
+define( 'WC_MLM_VERSION', '0.1.0' );
+define( 'WC_MLM_PATH', plugin_dir_path( __FILE__ ) );
+define( 'WC_MLM_URL', plugins_url( '', __FILE__ ) );
 
 /**
- * Class VendorModifications
+ * Class WC_MLM
  *
  * The main plugin class.
  */
-class VendorModifications {
+class WC_MLM {
 
 	public $vendors;
 
@@ -32,8 +32,8 @@ class VendorModifications {
 	function _init() {
 
 		// Create Vendor role
-		require_once __DIR__ . '/core/class-wcmlm-vendor-role.php';
-		$this->vendors = new WCMLM_Vendor_Role();
+		require_once __DIR__ . '/core/class-wc-mlm-vendor-role.php';
+		$this->vendors = new WC_MLM_Vendor_Role();
 	}
 
 	/**
@@ -45,4 +45,4 @@ class VendorModifications {
 	}
 }
 
-$VendorModifications = new VendorModifications();
+$VendorModifications = new WC_MLM();
