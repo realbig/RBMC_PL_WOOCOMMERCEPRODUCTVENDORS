@@ -1,0 +1,13 @@
+.wc-mlm-sales-leader-report {
+  width: 100%;
+  max-width: 1000px;
+  border-collapse: collapse; }
+  .wc-mlm-sales-leader-report th {
+    text-align: left;
+    font-size: 1.2em;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 10px;
+    width: 25%; }
+  .wc-mlm-sales-leader-report tbody tr:first-of-type td {
+    padding-top: 10px; }
+/*# sourceMappingURL=wc-mlm-admin.min.css.map */

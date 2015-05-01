@@ -11,14 +11,36 @@ define( 'WC_MLM_VERSION', '0.1.0' );
 define( 'WC_MLM_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WC_MLM_URL', plugins_url( '', __FILE__ ) );
 
+// REMOVE
+add_action( 'wp_head', function () {
+	?>
+	<style>
+		.xdebug-var-dump {
+			position: absolute;
+			background: #fff;
+			z-index: 100000000;
+		}
+	</style>
+<?php
+});
+
 /**
- * Class WC_MLM
+ * Class WC_MLM_Reporting
  *
  * The main plugin class.
  */
 class WC_MLM {
 
+	/**
+	 * @var WC_MLM_Vendors
+	 */
 	public $vendors;
+
+	/**
+	 * @var WC_MLM_Reporting
+	 */
+	public $reporting;
+	public $pages = array();
 
 	/**
 	 * Initializes the plugin.
@@ -31,9 +53,13 @@ class WC_MLM {
 
 	function _init() {
 
-		// Create Vendor role
-		require_once __DIR__ . '/core/class-wc-mlm-vendor-role.php';
-		$this->vendors = new WC_MLM_Vendor_Role();
+		// Create Vendor system
+		require_once __DIR__ . '/core/class-wc-mlm-vendors.php';
+		$this->vendors = new WC_MLM_Vendors();
+
+		// Create Reporting system
+		require_once __DIR__ . '/core/class-wc-mlm-reporting.php';
+		$this->reporting = new WC_MLM_Reporting();
 	}
 
 	/**
@@ -42,7 +68,50 @@ class WC_MLM {
 	 * @access private
 	 */
 	function _add_actions() {
+
+		add_action( 'init', array( $this, 'register_scripts' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
+	}
+
+	function register_scripts() {
+
+		// Admin
+		wp_register_style(
+			'wc-mlm-admin',
+			WC_MLM_URL . '/assets/css/wc-mlm-admin.min.css',
+			null,
+			WC_MLM_VERSION
+		);
+
+		// Reporting
+		wp_register_script(
+			'wc-mlm-reporting',
+			WC_MLM_URL . '/assets/js/source/nomin/reporting.js',
+			array( 'jquery' ),
+			WC_MLM_VERSION
+		);
+
+		// Vendor
+
+		// jQuery UI
+		wp_register_style(
+			'wc-mlm-jquery-ui-style',
+			'https://ajax.googleapis.com/ajax/libs/jqueryui/1.11.4/themes/smoothness/jquery-ui.css',
+			null,
+			'1.11.4'
+		);
+	}
+
+	function enqueue_scripts() {
+
+		wp_enqueue_script( 'wc-mlm-reporting' );
+	}
+
+	function admin_enqueue_scripts() {
+
+		wp_enqueue_style( 'wc-mlm-admin' );
 	}
 }
 
-$VendorModifications = new WC_MLM();
+$WC_MLM = new WC_MLM();

@@ -14,8 +14,12 @@ module.exports = function (grunt) {
                 livereload: true
             },
             sass: {
-                files: ['assets/scss/**/*.scss'],
+                files: ['assets/scss/**/*.scss', '!assets/scss/admin/**/*.scss'],
                 tasks: ['sass:main', 'autoprefixer:main', 'notify:sass']
+            },
+            sass_admin: {
+                files: ['assets/scss/admin/**/*.scss'],
+                tasks: ['sass:admin', 'autoprefixer:admin', 'notify:sass']
             },
             js: {
                 files: ['assets/js/source/*.js'],
@@ -33,7 +37,12 @@ module.exports = function (grunt) {
             },
             main: {
                 files: {
-                    'assets/css/wc-vendor-modifications-front.min.css': 'assets/scss/main.scss'
+                    'assets/css/wc-mlm-front.min.css': 'assets/scss/main.scss'
+                }
+            },
+            admin: {
+                files: {
+                    'assets/css/wc-mlm-admin.min.css': 'assets/scss/admin/admin.scss'
                 }
             }
         },
@@ -44,7 +53,10 @@ module.exports = function (grunt) {
                 map: true
             },
             main: {
-                src: 'assets/css/wc-vendor-modifications-front.min.css'
+                src: 'assets/css/wc-mlm-front.min.css'
+            },
+            admin: {
+                src: 'assets/css/wc-mlm-admin.min.css'
             }
         },
 
@@ -55,7 +67,7 @@ module.exports = function (grunt) {
             },
             main: {
                 files: {
-                    'assets/js/wc-vendor-modifications.min.js': [
+                    'assets/js/wc-mlm.min.js': [
                         'assets/js/source/*.js'
                     ]
                 }
