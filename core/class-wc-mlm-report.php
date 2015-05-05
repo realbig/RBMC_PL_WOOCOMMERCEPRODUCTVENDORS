@@ -49,7 +49,7 @@ class WC_MLM_Report {
 
 		return wp_parse_args( $date_query, array(
 			'inclusive' => true,
-			'after'     => '- 30 days'
+			'after'     => 'first day of this month',
 		) );
 	}
 
@@ -58,7 +58,7 @@ class WC_MLM_Report {
 		$args = wp_parse_args( $args, array(
 			'post_type'   => 'shop_order',
 			'numberposts' => - 1,
-			'post_status' => array_keys( wc_get_order_statuses() ),
+			'post_status' => array( 'wc-completed' ),
 			'date_query'  => $this->date_query,
 		) );
 
@@ -130,8 +130,6 @@ class WC_MLM_Report {
 
 	private function _get_commission() {
 
-		global $WC_MLM;
-
 		$commission = array(
 			'pending' => 0,
 			'final' => 0,
@@ -147,7 +145,7 @@ class WC_MLM_Report {
 			if ( $order_time < $return_time ) {
 				$commission['final'] = $commission['final'] + (int) $item['line_total'];
 			} else {
-				$commission['pending'] = $commission['final'] + (int) $item['line_total'];
+				$commission['pending'] = $commission['pending'] + (int) $item['line_total'];
 			}
 		}
 

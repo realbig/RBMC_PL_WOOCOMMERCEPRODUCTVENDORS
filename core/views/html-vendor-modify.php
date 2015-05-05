@@ -9,8 +9,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die();
 }
 
-global $WC_MLM;
-
 $this->page_title .= ': Edit';
 $user = get_user_by( 'id', $vendor->ID );/* Get user info. */
 
@@ -22,7 +20,7 @@ if ( isset( $_POST['vendor-frontend-modify'] ) && wp_verify_nonce( $_REQUEST['_w
 		update_user_meta( get_current_user_id(), '_vendor_edit_messages', array(
 			array(
 				'type'    => 'success',
-				'message' => 'Vendor changes successful.',
+				'message' => _wc_mlm_setting( 'vendor_verbage' ) . ' changes successful.',
 			)
 		) );
 
@@ -33,7 +31,7 @@ if ( isset( $_POST['vendor-frontend-modify'] ) && wp_verify_nonce( $_REQUEST['_w
 		update_user_meta( get_current_user_id(), '_vendor_edit_messages', array(
 			array(
 				'type'    => 'notice',
-				'message' => 'Vendor changes sent for approval.',
+				'message' => _wc_mlm_setting( 'vendor_verbage' ) . ' changes sent for approval.',
 			)
 		) );
 
@@ -68,7 +66,7 @@ if ( isset( $_POST['vendor-frontend-delete'] ) && wp_verify_nonce( $_REQUEST['_w
 		update_user_meta( get_current_user_id(), '_vendor_edit_messages', array(
 			array(
 				'type'    => 'error',
-				'message' => 'Vendor deletion sent for approval.',
+				'message' => _wc_mlm_setting( 'vendor_verbage' ) . ' deletion sent for approval.',
 			)
 		) );
 
@@ -114,9 +112,9 @@ ob_start();
 
 			<input type="hidden" name="_vendor_active" value="Active" />
 
-			<input type="submit" class="button" name="vendor-frontend-modify" value="Update Vendor"/>
-			<input type="submit" class="button warning" name="vendor-frontend-delete" value="Delete"
-			       onclick="return confirm('WARNING: You are about to DELETE this vendor.\nThis cannot be done\n\nAre you sure?')"/>
+			<input type="submit" class="button" name="vendor-frontend-modify" value="Update <?php echo _wc_mlm_setting( 'vendor_verbage' ); ?>"/>
+			<input type="submit" class="button warning" name="vendor-frontend-delete" value="Delete <?php echo _wc_mlm_setting( 'vendor_verbage' ); ?>"
+			       onclick="return confirm('WARNING: You are about to DELETE this <?php echo strtolower( _wc_mlm_setting( 'vendor_verbage' ) ); ?>.\nThis cannot be done\n\nAre you sure?')"/>
 		</form>
 	</div>
 <?php

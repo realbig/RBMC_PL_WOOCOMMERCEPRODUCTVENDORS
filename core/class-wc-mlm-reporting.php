@@ -9,6 +9,7 @@ class WC_MLM_Reporting {
 
 	private $page_title;
 	private $page_content;
+	private $body_classes;
 
 	function __construct() {
 
@@ -66,7 +67,7 @@ class WC_MLM_Reporting {
 		add_rewrite_tag( '%vendor_action%', '([^&]+)' );
 
 		add_rewrite_rule(
-			"vendor/{$vendors_regex}/?([^/]+)?$",
+			_wc_mlm_setting( 'vendor_slug' ) . "/{$vendors_regex}/?([^/]+)?$",
 			'index.php?vendor=$matches[1]&vendor_action=$matches[2]&page_id=' . $WC_MLM->pages['reporting'],
 			'top'
 		);
@@ -79,7 +80,7 @@ class WC_MLM_Reporting {
 
 	function _setup_vendor_page() {
 
-		global $wp_query, $WC_MLM;
+		global $wp_query;
 
 		$vendor_slug = isset( $wp_query->query_vars['vendor'] ) ? $wp_query->query_vars['vendor'] : false;
 		$action      = isset( $wp_query->query_vars['vendor_action'] ) ? $wp_query->query_vars['vendor_action'] : false;
@@ -93,7 +94,7 @@ class WC_MLM_Reporting {
 			$action = 'vendor_report';
 		}
 
-		$vendor = $WC_MLM->vendors->get_vendor_by_slug( $vendor_slug );
+		$vendor = WC_MLM_Vendors::get_vendor_by_slug( $vendor_slug );
 
 		if ( ! $vendor ) {
 			return;
@@ -104,7 +105,7 @@ class WC_MLM_Reporting {
 		// Security check
 		$can_view = true;
 
-		$current_user_vendor = get_current_user_id() != $vendor->ID ? $WC_MLM->vendors->get_vendor( get_current_user_id() ) : $vendor;
+		$current_user_vendor = get_current_user_id() != $vendor->ID ? WC_MLM_Vendors::get_vendor( get_current_user_id() ) : $vendor;
 		$current_user_vendor_descendants = $current_user_vendor !== false ? $current_user_vendor->get_descendants() : false;
 
 		// Admins automatically can view
@@ -134,7 +135,8 @@ class WC_MLM_Reporting {
 		switch ( $action ) {
 			case 'vendor_report':
 				include_once __DIR__ . '/views/html-vendor-report.php';
-				$this->page_title .= '<br/><small><a href="' . $vendor->get_admin_url( 'modify' ) . '" class="button">(Modify Vendor)</a>
+				$this->page_title = get_avatar( $vendor->ID, 300, '', '', array( 'class' => 'vendor-report-title-avatar' ) ) . $this->page_title;
+				$this->page_title .= '<br/><small><a href="' . $vendor->get_admin_url( 'modify' ) . '" class="button">(Modify ' . _wc_mlm_setting( 'vendor_verbage' ) . ')</a>
 </small>';
 				break;
 			case 'modify':
@@ -144,46 +146,49 @@ class WC_MLM_Reporting {
 
 		add_action( 'the_title', array( $this, '_report_page_title' ), 9999 );
 		add_action( 'the_content', array( $this, '_report_page_content' ), 9999 );
+		add_filter( 'body_class', array( $this, '_report_page_body_classes' ), 9999 );
 	}
 
 	function output_vendor_descendants( $vendors, $user_ID ) {
 
-		global $WC_MLM;
-
 		static $depth;
 
-		if ( ! $depth ) {
-			$depth = 1;
-		} else {
-			$depth ++;
+		if ( $depth === null ) {
+			$depth = 0;
 		}
 
-		$vendor = $WC_MLM->vendors->get_vendor( $user_ID );
+		$vendor = WC_MLM_Vendors::get_vendor( $user_ID );
 
 		if ( ! $vendor ) {
 			return;
 		}
 		?>
-		<ul class="<?php echo $depth === 1 ? 'vendor-descendants' : 'vendor-descendants-sub'; ?>">
-			<li>
+		<tr>
+			<td>
+				<?php echo get_avatar( $user_ID, 150 ); ?>
+			</td>
+			<td>
+				<?php echo str_repeat( '&nbsp;&nbsp;&nbsp;&nbsp;', $depth ); ?>
 				<a href="<?php echo $vendor->get_admin_url(); ?>">
 					<?php echo $vendor->name; ?>
 				</a>
+			</td>
+		</tr>
 
-				<?php
-				if ( is_array( $vendors ) ) {
-					array_walk( $vendors, array( $this, 'output_vendor_descendants' ) );
-				}
-				?>
-			</li>
-		</ul>
+		<?php
+		if ( is_array( $vendors ) ) {
+			$depth ++;
+			array_walk( $vendors, array( $this, 'output_vendor_descendants' ) );
+			$depth --;
+		}
+		?>
 	<?php
 	}
 
 	function _cannot_view_vendor() {
 
 		echo '<div class="woocommerce">';
-		wc_print_notice( 'Cannot view this vendor.', 'error' );
+		wc_print_notice( 'Cannot view this ' . strtolower( _wc_mlm_setting( 'vendor_verbage' ) ) . '.', 'error' );
 		echo '</div>';
 	}
 
@@ -195,15 +200,21 @@ class WC_MLM_Reporting {
 		return $this->page_content;
 	}
 
+	function _report_page_body_classes( $classes ) {
+
+		$classes[] = 'vendor-report';
+		return $classes;
+	}
+
 	function _add_vendor_report( $reports ) {
 
 
 		$reports['vendors'] = array(
-			'title'  => 'Vendors',
+			'title'  => _wc_mlm_setting( 'vendor_verbage' ) . 's',
 			'reports' => array(
 				"vendors" => array(
-					'title'       => 'Vendors',
-					'description' => 'A basic rundown of all vendors.',
+					'title'       => _wc_mlm_setting( 'vendor_verbage' ) . 's',
+					'description' => 'A basic rundown of all ' . strtolower( _wc_mlm_setting( 'vendor_verbage' ) ) . 's.',
 					'callback'    => array( $this, '_vendor_report_output' )
 				),
 			),
@@ -279,7 +290,7 @@ class WC_MLM_Reporting {
 		require_once __DIR__ . '/class-wc-mlm-report-table.php';
 		$report_table = new WC_MLM_ReportTable( array(
 			'vendor'             => array(
-				'label'        => 'Vendor',
+				'label'        => _wc_mlm_setting( 'vendor_verbage' ),
 				'type'         => 'name',
 				'order'        => 'char',
 				'orderdefault' => 'asc',

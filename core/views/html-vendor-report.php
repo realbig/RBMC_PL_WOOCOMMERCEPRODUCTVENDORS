@@ -16,29 +16,23 @@ wp_enqueue_style( 'wc-mlm-jquery-ui-style' );
 
 // Date query
 $date_query = array();
-$date_from  = array();
-$date_to    = array();
+$date_from = '';
+$date_to   = '';
 
-if ( isset( $_GET['vendor-report-period-from'] ) ) {
+if ( isset( $_GET['date_from'] ) ) {
 
-	$date_from = explode( '_', $_GET['vendor-report-period-from'] );
+	$date_from = (int) $_GET['date_from'];
 
-	$date_query['after'] = array(
-		'month' => $date_from[0],
-		'day'   => $date_from[1],
-		'year'  => $date_from[2],
-	);
+	$month_text           = $date_from > 0 ? "-$date_from months" : 'this month';
+	$date_query['after'] = "first day of $month_text";
 }
 
-if ( isset( $_GET['vendor-report-period-to'] ) ) {
+if ( isset( $_GET['date_to'] ) ) {
 
-	$date_to = explode( '_', $_GET['vendor-report-period-to'] );
+	$date_to = (int)  $_GET['date_to'];
 
-	$date_query['before'] = array(
-		'month' => $date_to[0],
-		'day'   => $date_to[1],
-		'year'  => $date_to[2],
-	);
+	$month_text           = $date_to > 0 ? "-$date_to months" : 'this month';
+	$date_query['before'] = "last day of $month_text";
 }
 
 $report = new WC_MLM_Report(
@@ -53,49 +47,93 @@ $sales_bonus = $vendor->get_sales_bonus( $date_query );
 
 ob_start();
 ?>
+	<div class="clear"></div>
+
 	<div class="woocommerce wc-mlm-report">
 
-		<?php WC_MLM_Reporting::show_vendor_messages( $vendor->ID ); ?>
+		<?php WC_MLM_Reporting::show_vendor_messages(); ?>
 
-		<form class="wc-mlm-report-actions" method="get">
-			<label class="wc-mlm-date-query-from">
-				<input type="text" class="vendor-report-period-from"
-				       value="<?php echo implode( '/', $date_from ); ?>"/>
-				<input type="hidden" name="vendor-report-period-from"/>
-			</label>
+		<div class="month-select">
 
-			<label class="wc-mlm-date-query-to">
-				<input type="text" class="vendor-report-period-to"
-				       value="<?php echo implode( '/', $date_to ); ?>"/>
-				<input type="hidden" name="vendor-report-period-to"/>
-			</label>
+			<?php
+			$count = isset( $_GET['add_months'] ) ? (int) $_GET['add_months'] + 5 : 5;
+			for ( $i = 0; $i < $count; $i ++ ) :
+				?>
+				<a href="#" class="month-button" data-month="<?php echo $i; ?>">
+					<?php echo date( 'M', strtotime( "-$i month" ) ); ?>
+				</a>
 
-			<input type="submit" class="button" value="Go"/>
-		</form>
+				<?php if ( date( 'M', strtotime( "-$i month" ) ) == 'Jan' && $i !== $count - 1 ) : ?>
+					<div class="clear"></div>
+					<div class="year-sep">
+						-<?php echo date( 'Y', strtotime( '-' . ( $i + 1 ) . ' month' ) ); ;?>-
+					</div>
+				<?php endif; ?>
+			<?php endfor; ?>
+
+		</div>
 
 		<div class="clear"></div>
 
-		<p class="total-sales">
-			<strong>Total Sales:</strong> <?php echo wc_price( $report->sales ); ?>
+		<div class="month-actions">
+			<a href="#" class="go-button">Go</a>
 
-			<?php if ( $vendor->level === 1 ) : ?>
-				<br/>
-				<strong>Sales Bonus:</strong> <?php echo wc_price( $sales_bonus ); ?>
-			<?php endif; ?>
-		</p>
+			<a href="#" class="more-button"
+			   data-add="<?php echo isset( $_GET['add_months'] ) ? (int) $_GET['add_months'] + 3 : 3; ?>">+</a>
+			<a href="#" class="less-button"
+			   data-add="<?php echo isset( $_GET['add_months'] ) ? max( (int) $_GET['add_months'] - 3, 0 ): 0; ?>">-</a>
+		</div>
 
-		<p class="total-commission">
-			<strong>Total Pending
-				Commission:</strong> <?php echo wc_price( $report->commission['pending'] ); ?>
-			<br/>
-			<strong>Total Final Commission:</strong> <?php echo wc_price( $report->commission['final'] ); ?>
-		</p>
+		<div class="clear"></div>
+
+		<div class="totals">
+
+			<div class="total-sales result-container">
+
+				<h3>Sales</h3>
+
+				<div class="result-highlight">
+					<div class="container">
+					<span class="result-text">
+						<?php echo wc_price( $report->sales ); ?>
+
+						<?php if ( $vendor->level === 1 ) : ?>
+							<br/>
+							<span class="result-secondary">
+								Bonus: <?php echo $sales_bonus; ?>
+							</span>
+						<?php endif; ?>
+
+					</span>
+					</div>
+				</div>
+			</div>
+
+			<div class="total-commission result-container secondary">
+
+				<h3>Commission</h3>
+
+				<div class="result-highlight">
+					<div class="container">
+					<span class="result-text">
+						<?php echo wc_price( $report->commission['final'] ); ?>
+
+						<br/>
+						<span class="result-secondary">
+							Pending: <?php echo wc_price( $report->commission['pending'] ); ?>
+						</span>
+					</span>
+					</div>
+				</div>
+			</div>
+
+		</div>
 
 		<?php if ( ! empty( $report->products ) ) : ?>
 
-			<h3>Products</h3>
+			<h3>Sold Products</h3>
 
-			<table class="vendor-report-descendants shop_table">
+			<table class="vendor-report-products shop_table">
 				<thead>
 				<tr>
 					<th>
@@ -147,7 +185,12 @@ ob_start();
 
 			<h3>Your Vendors</h3>
 
-			<?php array_walk( $vendor_descedants, array( $this, 'output_vendor_descendants' ) ); ?>
+			<table class="vendor-report-descendants shop_table">
+
+				<tbody>
+				<?php array_walk( $vendor_descedants, array( $this, 'output_vendor_descendants' ) ); ?>
+				</tbody>
+			</table>
 
 		<?php endif; ?>
 	</div>

@@ -5,22 +5,20 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die();
 }
 
-global $WC_MLM;
-
-$current_vendor = $WC_MLM->vendors->get_vendor( $user->ID );
+$current_vendor = WC_MLM_Vendors::get_vendor( $user->ID );
 
 $can_view   = current_user_can( 'manage_options' ) || $user->ID == get_current_user_id() || is_admin();
 $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descendant( get_current_user_id() );
 ?>
 
-<h3>Vendor Settings</h3>
+<h3><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Settings</h3>
 
 <table class="form-table">
 
 	<?php if ( $admin_view ) : ?>
 		<tr>
 			<th>
-				<label for="_vendor_parent">Vendor Parent</label>
+				<label for="_vendor_parent"><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Parent</label>
 			</th>
 
 			<td>
@@ -65,7 +63,7 @@ $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descen
 	<?php if ( $can_view ) : ?>
 		<tr>
 			<th>
-				<label for="_vendor_name">Vendor Name</label>
+				<label for="_vendor_name"><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Name</label>
 			</th>
 
 			<td>
@@ -76,7 +74,7 @@ $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descen
 
 		<tr>
 			<th>
-				<label for="_vendor_slug">Vendor Slug</label>
+				<label for="_vendor_slug"><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Slug</label>
 			</th>
 
 			<td>
@@ -92,7 +90,7 @@ $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descen
 
 		<tr>
 			<th>
-				<label for="_vendor_email">Vendor Email</label>
+				<label for="_vendor_email"><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Email</label>
 			</th>
 
 			<td>
@@ -107,7 +105,7 @@ $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descen
 
 		<tr>
 			<th>
-				<label for="_vendor_phone">Vendor Phone Number</label>
+				<label for="_vendor_phone"><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Phone Number</label>
 			</th>
 
 			<td>
@@ -121,7 +119,7 @@ $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descen
 	<?php if ( $admin_view ) : ?>
 		<tr>
 			<th>
-				<label for="_vendor_commission_tier">Vendor Commission Tier</label>
+				<label for="_vendor_commission_tier"><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Commission Tier</label>
 			</th>
 
 			<td>

@@ -47,6 +47,11 @@ class WC_MLM {
 	 * @var WC_MLM_VendorModifications
 	 */
 	public $vendor_modifications;
+
+	/**
+	 * @var WC_MLM_Admin
+	 */
+	public $admin;
 	public $pages = array();
 
 	/**
@@ -63,6 +68,9 @@ class WC_MLM {
 		// Includes
 		require_once __DIR__ . '/core/includes.php';
 
+		// Helpers
+		require_once __DIR__ . '/core/functions.php';
+
 		// Create Vendor system
 		require_once __DIR__ . '/core/class-wc-mlm-vendors.php';
 		$this->vendors = new WC_MLM_Vendors();
@@ -74,6 +82,12 @@ class WC_MLM {
 		// Create vendor modifications system
 		require_once __DIR__ . '/core/class-wc-mlm-vendor-modifications.php';
 		$this->vendor_modifications = new WC_MLM_VendorModifications();
+
+		// Admin pages
+		if ( is_admin() ) {
+			require_once __DIR__ . '/core/class-wc-mlm-admin.php';
+			$this->admin = new WC_MLM_Admin();
+		}
 	}
 
 	/**

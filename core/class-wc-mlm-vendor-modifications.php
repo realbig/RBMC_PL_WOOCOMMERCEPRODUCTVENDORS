@@ -7,24 +7,27 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class WC_MLM_VendorModifications {
 
-	public static $available_modifications = array(
-		'parent'          => array(
-			'label' => 'Parent',
-		),
-		'commission_tier' => array(
-			'label' => 'Commission Tier',
-		),
-		'active' => array(
-			'label' => 'Vendor not approved',
-		),
-		'delete' => array(
-			'label' => 'Delete Vendor',
-		),
-	);
+	public static $available_modifications = array();
 	public $modifications;
 	public $modifications_list;
 
 	function __construct() {
+
+		// Set here due to need of function calling
+		self::$available_modifications = array(
+			'parent'          => array(
+				'label' => 'Parent',
+			),
+			'commission_tier' => array(
+				'label' => 'Commission Tier',
+			),
+			'active' => array(
+				'label' => _wc_mlm_setting( 'vendor_verbage' ) . ' not approved',
+			),
+			'delete' => array(
+				'label' => 'Delete ' . _wc_mlm_setting( 'vendor_verbage' ),
+			),
+		);
 
 		$this->_add_actions();
 	}
@@ -40,8 +43,8 @@ class WC_MLM_VendorModifications {
 
 		$hook = add_submenu_page(
 			'woocommerce',
-			'Vendor Updates',
-			'Vendor Updates',
+			_wc_mlm_setting( 'vendor_verbage' ) . ' Updates',
+			_wc_mlm_setting( 'vendor_verbage' ) . ' Updates',
 			'manage_options',
 			'vendor-updates',
 			array( $this, '_page_output' )
@@ -85,7 +88,7 @@ class WC_MLM_VendorModifications {
 			if ( current_user_can( 'manage_options' ) ) {
 				foreach ( $submenu['woocommerce'] as $key => $menu_item ) {
 
-					if ( 0 === strpos( $menu_item[0], 'Vendor Updates' ) ) {
+					if ( 0 === strpos( $menu_item[0], _wc_mlm_setting( 'vendor_verbage' ) . ' Updates' ) ) {
 
 						$this->_get_modifications();
 						$count = count( $this->modifications );

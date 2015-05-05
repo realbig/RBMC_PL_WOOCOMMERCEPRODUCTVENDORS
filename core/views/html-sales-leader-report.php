@@ -41,7 +41,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 				<?php $report_table->output(); ?>
 
-				Total COS: <?php echo wc_price( $total_cos ); ?>
+				<p class="total-cos">
+					<em>
+						Total COS: <?php echo wc_price( $total_cos ); ?>
+					</em>
+				</p>
 
 			</div>
 

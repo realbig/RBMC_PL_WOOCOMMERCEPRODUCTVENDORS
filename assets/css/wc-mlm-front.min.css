@@ -1,7 +1,113 @@
-.wc-mlm-report .wc-mlm-report-actions .wc-mlm-date-query-from, .wc-mlm-report .wc-mlm-report-actions .wc-mlm-date-query-to {
+body.vendor-report .clear {
+  clear: both;
+  display: table; }
+body.vendor-report .vendor-report-title-avatar {
   float: left;
-  width: 50%;
-  max-width: 200px;
-  margin-bottom: 10px;
+  width: 150px;
+  max-width: 25%;
   margin-right: 10px; }
+body.vendor-report .wc-mlm-report .month-button, body.vendor-report .wc-mlm-report .go-button, body.vendor-report .wc-mlm-report .more-button, body.vendor-report .wc-mlm-report .less-button {
+  float: left;
+  display: inline-block;
+  background: #ddd;
+  padding: 5px 10px;
+  text-decoration: none;
+  border: none;
+  outline: none !important; }
+  body.vendor-report .wc-mlm-report .month-button:hover, body.vendor-report .wc-mlm-report .go-button:hover, body.vendor-report .wc-mlm-report .more-button:hover, body.vendor-report .wc-mlm-report .less-button:hover {
+    background: #d0d0d0; }
+body.vendor-report .wc-mlm-report .more-button, body.vendor-report .wc-mlm-report .less-button {
+  margin-right: 5px;
+  font-weight: bold;
+  text-transform: uppercase;
+  width: 2em;
+  text-align: center; }
+body.vendor-report .wc-mlm-report .go-button {
+  margin-right: 5px;
+  background: #1EBD95;
+  color: #fff;
+  text-transform: uppercase; }
+  body.vendor-report .wc-mlm-report .go-button:hover {
+    background: #1ba784; }
+body.vendor-report .wc-mlm-report .month-button {
+  float: right;
+  margin-top: 10px;
+  margin-bottom: 10px; }
+  body.vendor-report .wc-mlm-report .month-button.from {
+    border-top-left-radius: 5px;
+    border-bottom-left-radius: 5px; }
+  body.vendor-report .wc-mlm-report .month-button.to {
+    border-top-right-radius: 5px;
+    border-bottom-right-radius: 5px; }
+  body.vendor-report .wc-mlm-report .month-button.highlight {
+    position: relative;
+    top: 5px;
+    background: #4985ce;
+    color: #fff;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    margin-top: 0;
+    margin-bottom: 0; }
+    body.vendor-report .wc-mlm-report .month-button.highlight:hover {
+      background: #3678c8; }
+  body.vendor-report .wc-mlm-report .month-button.middle-highlight {
+    background: #71a0d9;
+    color: #fff; }
+    body.vendor-report .wc-mlm-report .month-button.middle-highlight:hover {
+      background: #5d92d3; }
+body.vendor-report .wc-mlm-report .month-select {
+  float: left;
+  margin-bottom: 20px;
+  margin-top: 20px; }
+  body.vendor-report .wc-mlm-report .month-select .year-sep {
+    text-align: right;
+    margin-top: 5px;
+    font-weight: bold;
+    font-style: italic;
+    color: #999; }
+body.vendor-report .wc-mlm-report .totals {
+  text-align: center; }
+body.vendor-report .wc-mlm-report .result-container {
+  display: inline-block;
+  margin: 0 10px; }
+  body.vendor-report .wc-mlm-report .result-container.secondary h3 {
+    color: #1EBD95; }
+  body.vendor-report .wc-mlm-report .result-container.secondary .result-highlight {
+    border-color: #1EBD95; }
+  body.vendor-report .wc-mlm-report .result-container.secondary .container {
+    background: #1EBD95; }
+  body.vendor-report .wc-mlm-report .result-container h3 {
+    margin: 0 0 10px 0;
+    color: #4985ce; }
+body.vendor-report .wc-mlm-report .result-highlight {
+  position: relative;
+  border: 5px solid #4985ce;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%; }
+  body.vendor-report .wc-mlm-report .result-highlight .container {
+    position: relative;
+    display: table-cell;
+    vertical-align: middle;
+    left: 15px;
+    top: 15px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: #4985ce;
+    text-align: center;
+    font-size: 25px;
+    line-height: 1;
+    color: #fff; }
+  body.vendor-report .wc-mlm-report .result-highlight .result-text {
+    margin: 0 auto; }
+    body.vendor-report .wc-mlm-report .result-highlight .result-text .result-secondary {
+      font-size: 60%; }
+body.vendor-report .wc-mlm-report .vendor-report-descendants {
+  border-collapse: collapse; }
+  body.vendor-report .wc-mlm-report .vendor-report-descendants td {
+    border-width: 0;
+    border-color: #ddd; }
+    body.vendor-report .wc-mlm-report .vendor-report-descendants td:first-child {
+      width: 75px; }
 /*# sourceMappingURL=wc-mlm-front.min.css.map */

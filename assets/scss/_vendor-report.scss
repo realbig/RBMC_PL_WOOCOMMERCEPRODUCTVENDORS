@@ -1,11 +1,182 @@
-.wc-mlm-report {
-  .wc-mlm-report-actions {
-    .wc-mlm-date-query-from, .wc-mlm-date-query-to {
+$result-base: 200px;
+$result-inner-base: $result-base * 0.8;
+$primary-color: #4985ce;
+$secondary-color: #1EBD95;
+
+body.vendor-report {
+
+  .clear {
+    clear: both;
+    display: table;
+  }
+
+  .vendor-report-title-avatar {
+    float: left;
+    width: 150px;
+    max-width: 25%;
+    margin-right: 10px;
+  }
+
+  .wc-mlm-report {
+
+    .month-button, .go-button, .more-button, .less-button {
       float: left;
-      width: 50%;
-      max-width: 200px;
+      display: inline-block;
+      background: #ddd;
+      padding: 5px 10px;
+      text-decoration: none;
+      border: none;
+      outline: none !important;
+
+      &:hover {
+        background: darken(#ddd, 5%);
+      }
+    }
+
+    .more-button, .less-button {
+      margin-right: 5px;
+      font-weight: bold;
+      text-transform: uppercase;
+      width: 2em;
+      text-align: center;
+    }
+
+    .go-button {
+      margin-right: 5px;
+      background: $secondary-color;
+      color: #fff;
+      text-transform: uppercase;
+
+      &:hover {
+        background: darken($secondary-color, 5%);
+      }
+    }
+
+    .month-button {
+      float: right;
+      margin-top: 10px;
       margin-bottom: 10px;
-      margin-right: 10px;
+
+      &.from {
+        border-top-left-radius: 5px;
+        border-bottom-left-radius: 5px;
+      }
+
+      &.to {
+        border-top-right-radius: 5px;
+        border-bottom-right-radius: 5px;
+      }
+
+      &.highlight {
+        position: relative;
+        top: 5px;
+        background: $primary-color;
+        color: #fff;
+        padding-top: 10px;
+        padding-bottom: 10px;
+        margin-top: 0;
+        margin-bottom: 0;
+
+        &:hover {
+          background: darken($primary-color, 5%);
+        }
+      }
+
+      &.middle-highlight {
+        background: lighten($primary-color, 10%);
+        color: #fff;
+
+        &:hover {
+          background: lighten($primary-color, 5%);
+        }
+      }
+    }
+
+    .month-select {
+      float: left;
+      margin-bottom: 20px;
+      margin-top: 20px;
+
+      .year-sep {
+        text-align: right;
+        margin-top: 5px;
+        font-weight: bold;
+        font-style: italic;
+        color: #999;
+      }
+    }
+
+    .totals {
+      text-align: center;
+    }
+
+    .result-container {
+      display: inline-block;
+      margin: 0 10px;
+
+      &.secondary {
+        h3 {
+          color: $secondary-color;
+        }
+
+        .result-highlight {
+          border-color: $secondary-color;
+        }
+
+        .container {
+          background: $secondary-color;
+        }
+      }
+
+      h3 {
+        margin: 0 0 10px 0;
+        color: $primary-color;
+      }
+    }
+
+    .result-highlight {
+      position: relative;
+      border: 5px solid $primary-color;
+      width: $result-base;
+      height: $result-base;
+      border-radius: 50%;
+
+      .container {
+        position: relative;
+        display: table-cell;
+        vertical-align: middle;
+        left: ($result-base - $result-inner-base - 10px) / 2;
+        top: ($result-base - $result-inner-base - 10px) / 2;
+        width: $result-inner-base;
+        height: $result-inner-base;
+        border-radius: 50%;
+        background: $primary-color;
+        text-align: center;
+        font-size: 25px;
+        line-height: 1;
+        color: #fff;
+      }
+
+      .result-text {
+        margin: 0 auto;
+
+        .result-secondary {
+          font-size: 60%;
+        }
+      }
+    }
+
+    .vendor-report-descendants {
+      border-collapse: collapse;
+
+      td {
+        border-width: 0;
+        border-color: #ddd;
+
+        &:first-child {
+          width: 75px;
+        }
+      }
     }
   }
 }

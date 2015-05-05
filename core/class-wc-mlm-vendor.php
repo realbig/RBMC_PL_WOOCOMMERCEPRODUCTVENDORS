@@ -55,8 +55,6 @@ class WC_MLM_Vendor {
 
 	private function _get_commission_tier() {
 
-		global $WC_MLM;
-
 		$tier = get_user_meta( $this->ID, '_vendor_commission_tier', true );
 
 		if ( ! $tier ) {
@@ -134,14 +132,12 @@ class WC_MLM_Vendor {
 
 	public function get_descendants( $user_ID = false ) {
 
-		global $WC_MLM;
-
 		$descendants = array();
 
 		if ( ! $user_ID ) {
 			$vendor = $this;
 		} else {
-			$vendor = $WC_MLM->vendors->get_vendor( $user_ID );
+			$vendor = WC_MLM_Vendors::get_vendor( $user_ID );
 		}
 
 		if ( ! $vendor ) {
@@ -168,10 +164,21 @@ class WC_MLM_Vendor {
 		return ! empty( $descendants ) ? $descendants : false;
 	}
 
-	public function get_sales_bonus() {
+	public function get_sales_bonus( $date_query = array() ) {
 
 		if ( $this->level !== 1 ) {
 			return false;
+		}
+
+		// Report is only within current month
+		if ( isset( $date_query['after'] ) && isset( $date_query['before'] ) ) {
+
+			$after_month = date( 'm', strtotime( $date_query['after'] ) );
+			$before_month = date( 'm', strtotime( $date_query['before'] ) );
+
+			if ( $after_month !== $before_month ) {
+				return '<br/>Invalid date range';
+			}
 		}
 
 		$children = $this->get_children();
@@ -179,13 +186,8 @@ class WC_MLM_Vendor {
 		$total_sales = 0;
 
 		if ( count( $children ) < 10 ) {
-			return  0;
+			return wc_price( 0 );
 		}
-
-		// Report is only within current month
-		$date_query = array(
-			'after' => 'first day of this month',
-		);
 
 		if ( $children ) {
 			foreach ( $children as $child ) {
@@ -195,7 +197,7 @@ class WC_MLM_Vendor {
 
 				// To get bonus, all children must have at least $100 in sales
 				if ( $report->sales < 100 ) {
-					return 0;
+					return wc_price( 0 );
 				}
 
 				$total_sales = $total_sales + $report->sales;
@@ -203,7 +205,7 @@ class WC_MLM_Vendor {
 		}
 
 		// 3% of total sales
-		return $total_sales * 0.03;
+		return wc_price( $total_sales * 0.03 );
 	}
 
 	public function get_all_children_sales( $date_query = array() ) {
@@ -237,11 +239,9 @@ class WC_MLM_Vendor {
 
 	private function _descendants_sales_walk( &$sales_bonus, $descendants, $date_query = array() ) {
 
-		global $WC_MLM;
-
 		foreach ( $descendants as $user_ID => $children ) {
 
-			$vendor      = $WC_MLM->vendors->get_vendor( $user_ID );
+			$vendor      = WC_MLM_Vendors::get_vendor( $user_ID );
 			$report      = new WC_MLM_Report( 'vendor', $vendor, $date_query );
 			$sales_bonus = $sales_bonus + $report->sales;
 
@@ -255,9 +255,11 @@ class WC_MLM_Vendor {
 
 	public function is_descendant( $user_ID ) {
 
-		global $WC_MLM;
+		$vendor = WC_MLM_Vendors::get_vendor( $user_ID );
 
-		$vendor = $WC_MLM->vendors->get_vendor( $user_ID );
+		if ( ! $vendor ) {
+			return false;
+		}
 
 		$descendants = $vendor->get_descendants();
 
@@ -300,7 +302,7 @@ class WC_MLM_Vendor {
 			update_user_meta( $referrer_user_ID, '_vendor_edit_messages', array(
 				array(
 					'type'    => 'success',
-					'message' => 'Vendor successfully deleted.',
+					'message' => _wc_mlm_setting( 'vendor_verbage' ) . ' successfully deleted.',
 				),
 			) );
 

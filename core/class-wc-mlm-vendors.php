@@ -9,20 +9,7 @@ class WC_MLM_Vendors {
 
 	public $vendor_role_exists = false;
 
-	public static $commission_tiers = array(
-		'1' => array(
-			'name'       => '(20%) Gold',
-			'percentage' => 20,
-		),
-		'2' => array(
-			'name'       => '(15%) Silver',
-			'percentage' => 15,
-		),
-		'3' => array(
-			'name'       => '(10%) Bronze',
-			'percentage' => 10,
-		),
-	);
+	public static $commission_tiers = array();
 
 	public static $meta_fields = array(
 		'_vendor_parent',
@@ -39,6 +26,22 @@ class WC_MLM_Vendors {
 	private $current_vendor_archive = false;
 
 	function __construct() {
+
+		// Here for ability to use functions
+		self::$commission_tiers = array(
+			'1' => array(
+				'name'       => _wc_mlm_setting( 'commission_tier_1' ),
+				'percentage' => 20,
+			),
+			'2' => array(
+				'name'       => _wc_mlm_setting( 'commission_tier_2' ),
+				'percentage' => 15,
+			),
+			'3' => array(
+				'name'       => _wc_mlm_setting( 'commission_tier_3' ),
+				'percentage' => 10,
+			),
+		);
 
 		$this->_add_actions();
 	}
@@ -85,8 +88,7 @@ class WC_MLM_Vendors {
 	function _add_cart_header_vendor( $translations, $text, $domain ) {
 
 		if ( $text == 'Price' && $domain == 'woocommerce' ) {
-			// TODO Make this editable or just the correct one
-			$translations .= '</th><th class="product-vendor">Vendor';
+			$translations .= '</th><th class="product-vendor">' . _wc_mlm_setting( 'vendor_verbage' );
 		}
 
 		return $translations;
@@ -208,17 +210,21 @@ class WC_MLM_Vendors {
 		$all_roles = $wp_roles->roles;
 
 		// Don't bother if already created
-		if ( isset( $all_roles['vendor'] ) ) {
+		if ( isset( $all_roles['vendor'] ) && _wc_mlm_setting( 'vendor_verbage' ) == $all_roles['vendor']['name'] ) {
 			$this->vendor_role_exists = true;
 
 			return;
+		}
+
+		if ( isset( $all_roles['vendor'] ) ) {
+			remove_role( 'vendor' );
 		}
 
 		// TODO Set actual capabilities
 		$capabilities              = $all_roles['editor']['capabilities'];
 		$capabilities['is_vendor'] = true;
 
-		add_role( 'vendor', 'Vendor', $capabilities );
+		add_role( 'vendor', _wc_mlm_setting( 'vendor_verbage' ), $capabilities );
 		$this->vendor_role_exists = true;
 	}
 
@@ -451,7 +457,7 @@ class WC_MLM_Vendors {
 	 * @access private
 	 */
 	function _vendor_page_not_exist() {
-		wc_print_notice( 'This Vendor does not exist.', 'error' );
+		wc_print_notice( 'This ' . _wc_mlm_setting( 'vendor_verbage' ) . ' does not exist.', 'error' );
 	}
 
 	public static function is_vendor( $user_ID ) {
