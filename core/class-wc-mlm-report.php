@@ -49,7 +49,7 @@ class WC_MLM_Report {
 
 		return wp_parse_args( $date_query, array(
 			'inclusive' => true,
-			'after'     => 'first day of this month',
+			'after'     => 'last day of -1 months',
 		) );
 	}
 
@@ -143,16 +143,11 @@ class WC_MLM_Report {
 			$order_time = strtotime( $item['date'] );
 
 			if ( $order_time < $return_time ) {
-				$commission['final'] = $commission['final'] + (int) $item['line_total'];
+				$commission['final'] = $commission['final'] + ( (int) $item['line_total'] / ( 100 / (int) $item['commission'] ) );
 			} else {
-				$commission['pending'] = $commission['pending'] + (int) $item['line_total'];
+				$commission['pending'] = $commission['pending'] + ( (int) $item['line_total'] / ( 100 / (int) $item['commission'] ) );
 			}
 		}
-
-		$percentage = (int) WC_MLM_Vendors::$commission_tiers[ $this->vendor->commission_tier ]['percentage'] / 100;
-
-		$commission['pending'] = $commission['pending'] * $percentage;
-		$commission['final'] = $commission['final'] * $percentage;
 
 		return $commission;
 	}

@@ -23,8 +23,7 @@ if ( isset( $_GET['date_from'] ) ) {
 
 	$date_from = (int) $_GET['date_from'];
 
-	$month_text           = $date_from > 0 ? "-$date_from months" : 'this month';
-	$date_query['after'] = "first day of $month_text";
+	$date_query['after'] = 'last day of -' . ( $date_from + 1 ). ' months';
 }
 
 if ( isset( $_GET['date_to'] ) ) {
@@ -46,6 +45,7 @@ $vendor_descedants = $vendor->get_descendants();
 $sales_bonus = $vendor->get_sales_bonus( $date_query );
 
 ob_start();
+var_dump( $date_query );
 ?>
 	<div class="clear"></div>
 

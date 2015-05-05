@@ -114,6 +114,7 @@ class WC_MLM_Vendors {
 	 */
 	function _checkout_add_order_item_vendor_meta( $item_id, $values ) {
 		wc_add_order_item_meta( $item_id, '_vendor', $values['vendor'] );
+		wc_add_order_item_meta( $item_id, '_commission', $values['commission'] );
 	}
 
 	/**
@@ -194,6 +195,7 @@ class WC_MLM_Vendors {
 		}
 
 		$cart_item_data['vendor'] = $this->current_vendor_archive->ID;
+		$cart_item_data['commission'] = self::$commission_tiers[ $this->current_vendor_archive->commission_tier ]['percentage'];
 
 		return $cart_item_data;
 	}

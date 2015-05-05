@@ -176,7 +176,7 @@ class WC_MLM_Vendor {
 			$after_month = date( 'm', strtotime( $date_query['after'] ) );
 			$before_month = date( 'm', strtotime( $date_query['before'] ) );
 
-			if ( $after_month !== $before_month ) {
+			if ( (int) $before_month - (int) $after_month > 1) {
 				return '<br/>Invalid date range';
 			}
 		}
@@ -328,6 +328,6 @@ class WC_MLM_Vendor {
 	}
 
 	public function get_admin_url( $trail = false ) {
-		return get_bloginfo( 'url' ) . '/vendor/' . $this->slug . ( $trail ? "/$trail" : '' );
+		return get_bloginfo( 'url' ) . '/' . strtolower( _wc_mlm_setting( 'vendor_verbage' ) ) . '/' . $this->slug . ( $trail ? "/$trail" : '' );
 	}
 }
