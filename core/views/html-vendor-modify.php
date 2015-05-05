@@ -80,29 +80,11 @@ if ( isset( $_POST['vendor-frontend-delete'] ) && wp_verify_nonce( $_REQUEST['_w
 	}
 }
 
-// Show pending changes
-$modifications = WC_MLM_VendorModifications::get_modifications();
-
-$messages = array();
-foreach ( $modifications as $modification ) {
-
-	if ( $modification['victim'] != $vendor->ID ) {
-		continue;
-	}
-
-	$modification = WC_MLM_VendorModifications::get_verbage( $modification );
-
-	$messages[] = array(
-		'type' => 'error',
-		'message' => 'Pending change from ' . $modification['instigator'] . '<br/><strong>' . $modification['type'] . ':</strong> <em>' . $modification['old_value'] . '</em> to <em>' . $modification['new_value'] . '</em>.',
-	);
-}
-
 ob_start();
 ?>
 	<div class="woocommerce">
 
-		<?php WC_MLM_Reporting::show_vendor_messages( $messages ); ?>
+		<?php WC_MLM_Reporting::show_vendor_messages(); ?>
 
 		<form method="post">
 

@@ -9,6 +9,7 @@ class WC_MLM_Reporting {
 
 	private $page_title;
 	private $page_content;
+	private $messages = array();
 	private $body_classes;
 
 	function __construct() {
@@ -132,6 +133,24 @@ class WC_MLM_Reporting {
 			return;
 		}
 
+		// Show pending changes as messages to the current vendor
+		$modifications = WC_MLM_VendorModifications::get_modifications();
+		foreach ( $modifications as $modification ) {
+
+			if ( $modification['victim'] != $vendor->ID ) {
+				continue;
+			}
+
+			$modification = WC_MLM_VendorModifications::get_verbage( $modification );
+
+			$this->messages[] = array(
+				'type' => 'error',
+				'message' => 'Pending change from ' . $modification['instigator'] . '<br/><strong>' . $modification['type'] . ':</strong> <em>' . $modification['old_value'] . '</em> to <em>' . $modification['new_value'] . '</em>.',
+			);
+		}
+
+		add_filter( 'vendor_messages', array( $this, '_report_page_messages' ) );
+
 		switch ( $action ) {
 			case 'vendor_report':
 				include_once __DIR__ . '/views/html-vendor-report.php';
@@ -146,7 +165,7 @@ class WC_MLM_Reporting {
 
 		add_action( 'the_title', array( $this, '_report_page_title' ), 9999 );
 		add_action( 'the_content', array( $this, '_report_page_content' ), 9999 );
-		add_filter( 'body_class', array( $this, '_report_page_body_classes' ), 9999 );
+		add_filter( 'body_class', array( $this, '_report_page_body_classes' ) );
 	}
 
 	function output_vendor_descendants( $vendors, $user_ID ) {
@@ -198,6 +217,11 @@ class WC_MLM_Reporting {
 
 	function _report_page_content() {
 		return $this->page_content;
+	}
+
+	function _report_page_messages( $messages = array() ) {
+
+		return array_merge( $messages, $this->messages );
 	}
 
 	function _report_page_body_classes( $classes ) {
@@ -367,6 +391,8 @@ class WC_MLM_Reporting {
 		$user_messages = get_user_meta( get_current_user_id(), '_vendor_edit_messages', true );
 		$user_messages = $user_messages ? $user_messages : array();
 		$messages = array_merge( $messages, $user_messages );
+
+		$messages = apply_filters( 'vendor_messages', $messages );
 
 		if ( $messages ) {
 
