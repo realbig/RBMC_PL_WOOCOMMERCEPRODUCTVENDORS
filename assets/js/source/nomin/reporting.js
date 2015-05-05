@@ -58,8 +58,13 @@ var WC_MLM_Reporting;
                     }
                 });
 
+                // Set defaults
                 $date_from.datepicker('setDate', $date_from.val() || '-1m');
                 $date_to.datepicker('setDate', $date_to.val() || '0d');
+
+                // Set min / max
+                $date_from.datepicker( "option", "maxDate", '0d' );
+                $date_to.datepicker( "option", "maxDate", '0d' );
             });
         }
     };

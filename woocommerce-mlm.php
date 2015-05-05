@@ -15,14 +15,16 @@ define( 'WC_MLM_URL', plugins_url( '', __FILE__ ) );
 add_action( 'wp_head', function () {
 	?>
 	<style>
-		.xdebug-var-dump {
-			position: absolute;
-			background: #fff;
-			z-index: 100000000;
-		}
+		/*.xdebug-var-dump {*/
+			/*position: absolute;*/
+			/*width: 50%;*/
+			/*background: #fff;*/
+			/*z-index: 100000000;*/
+		/*}*/
 	</style>
 <?php
 });
+
 
 /**
  * Class WC_MLM_Reporting
@@ -40,6 +42,11 @@ class WC_MLM {
 	 * @var WC_MLM_Reporting
 	 */
 	public $reporting;
+
+	/**
+	 * @var WC_MLM_VendorModifications
+	 */
+	public $vendor_modifications;
 	public $pages = array();
 
 	/**
@@ -53,6 +60,9 @@ class WC_MLM {
 
 	function _init() {
 
+		// Includes
+		require_once __DIR__ . '/core/includes.php';
+
 		// Create Vendor system
 		require_once __DIR__ . '/core/class-wc-mlm-vendors.php';
 		$this->vendors = new WC_MLM_Vendors();
@@ -60,6 +70,10 @@ class WC_MLM {
 		// Create Reporting system
 		require_once __DIR__ . '/core/class-wc-mlm-reporting.php';
 		$this->reporting = new WC_MLM_Reporting();
+
+		// Create vendor modifications system
+		require_once __DIR__ . '/core/class-wc-mlm-vendor-modifications.php';
+		$this->vendor_modifications = new WC_MLM_VendorModifications();
 	}
 
 	/**
@@ -92,6 +106,14 @@ class WC_MLM {
 			WC_MLM_VERSION
 		);
 
+		// Front
+		wp_register_style(
+			'wc-mlm-front',
+			WC_MLM_URL . '/assets/css/wc-mlm-front.min.css',
+			array(),
+			WC_MLM_VERSION
+		);
+
 		// Vendor
 
 		// jQuery UI
@@ -106,6 +128,7 @@ class WC_MLM {
 	function enqueue_scripts() {
 
 		wp_enqueue_script( 'wc-mlm-reporting' );
+		wp_enqueue_style( 'wc-mlm-front' );
 	}
 
 	function admin_enqueue_scripts() {

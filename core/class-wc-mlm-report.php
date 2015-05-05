@@ -17,9 +17,15 @@ class WC_MLM_Report {
 	public $orders;
 	public $items;
 	public $products;
-	public $total_sales = 0;
-	public $total_commission = 0;
+	public $sales = 0;
+	public $commission = 0;
+	public $cos = 0;
 
+	/**
+	 * @param string $type
+	 * @param bool|WC_MLM_Vendor   $vendor
+	 * @param array  $date_query
+	 */
 	function __construct( $type = 'vendor', $vendor = false, $date_query = array() ) {
 
 		// Setup properties
@@ -34,8 +40,9 @@ class WC_MLM_Report {
 			return;
 		}
 
-		$this->total_sales      = $this->_get_total_sales();
-		$this->total_commission = $this->_get_total_commission();
+		$this->sales      = $this->_get_sales();
+		$this->commission = $this->_get_commission();
+		$this->cos = $this->_get_cos();
 	}
 
 	private function _set_date_query( $date_query ) {
@@ -110,9 +117,9 @@ class WC_MLM_Report {
 		return $products;
 	}
 
-	private function _get_total_sales() {
+	private function _get_sales() {
 
-		$sales = (int) $this->total_sales;
+		$sales = (int) $this->sales;
 
 		foreach ( $this->items as $item ) {
 			$sales = $sales + (int) $item['line_total'];
@@ -121,7 +128,7 @@ class WC_MLM_Report {
 		return $sales;
 	}
 
-	private function _get_total_commission() {
+	private function _get_commission() {
 
 		global $WC_MLM;
 
@@ -144,11 +151,16 @@ class WC_MLM_Report {
 			}
 		}
 
-		$percentage = (int) $WC_MLM->vendors->commission_tiers[ $this->vendor->commission_tier ]['percentage'] / 100;
+		$percentage = (int) WC_MLM_Vendors::$commission_tiers[ $this->vendor->commission_tier ]['percentage'] / 100;
 
 		$commission['pending'] = $commission['pending'] * $percentage;
 		$commission['final'] = $commission['final'] * $percentage;
 
 		return $commission;
+	}
+
+	private function _get_cos() {
+
+		return count( $this->items ) * 5;
 	}
 }

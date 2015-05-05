@@ -25,11 +25,12 @@ class WC_MLM_Reporting {
 
 		// Setup the frontend reporting page
 		if ( ! is_admin() ) {
-			add_action( 'wp', array( $this, '_setup_reporting_page' ) );
+			add_action( 'wp', array( $this, '_setup_vendor_page' ) );
 		}
 
 		// Add the sales leader admin reporting page
-		add_action( 'admin_menu', array( $this, '_sales_leader_report_page' ) );
+		add_filter( 'woocommerce_admin_reports', array( $this, '_add_vendor_report' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, '_vendor_report_scripts' ) );
 	}
 
 	function _setup_pages() {
@@ -60,7 +61,7 @@ class WC_MLM_Reporting {
 
 		global $WC_MLM;
 
-		$vendors_regex = $WC_MLM->vendors->get_vendor_slugs_regex();
+		$vendors_regex = WC_MLM_Vendors::get_vendor_slugs_regex();
 
 		add_rewrite_tag( '%vendor_action%', '([^&]+)' );
 
@@ -69,9 +70,14 @@ class WC_MLM_Reporting {
 			'index.php?vendor=$matches[1]&vendor_action=$matches[2]&page_id=' . $WC_MLM->pages['reporting'],
 			'top'
 		);
+
+		if ( get_option( '_wc_mlm_flush_rewrite' ) ) {
+			flush_rewrite_rules();
+			delete_option( '_wc_mlm_flush_rewwrite' );
+		}
 	}
 
-	function _setup_reporting_page() {
+	function _setup_vendor_page() {
 
 		global $wp_query, $WC_MLM;
 
@@ -79,7 +85,7 @@ class WC_MLM_Reporting {
 		$action      = isset( $wp_query->query_vars['vendor_action'] ) ? $wp_query->query_vars['vendor_action'] : false;
 
 		// Not a vendor page
-		if ( ! $vendor_slug || $action === false ) {
+		if ( ! $vendor_slug || $action === false || $action == 'shop' ) {
 			return;
 		}
 
@@ -89,27 +95,29 @@ class WC_MLM_Reporting {
 
 		$vendor = $WC_MLM->vendors->get_vendor_by_slug( $vendor_slug );
 
+		if ( ! $vendor ) {
+			return;
+		}
+
 		$this->page_title = $vendor->name;
 
 		// Security check
 		$can_view = true;
 
-		$current_user_vendor             = get_current_user_id() != $vendor->ID ? $WC_MLM->vendors->get_vendor( get_current_user_id() ) : $vendor;
-		$current_user_vendor_descendants = $current_user_vendor !== false ? $current_user_vendor->get_descendants : false;
+		$current_user_vendor = get_current_user_id() != $vendor->ID ? $WC_MLM->vendors->get_vendor( get_current_user_id() ) : $vendor;
+		$current_user_vendor_descendants = $current_user_vendor !== false ? $current_user_vendor->get_descendants() : false;
 
 		// Admins automatically can view
 		if ( ! current_user_can( 'manage_options' ) ) {
 
 			// Not a vendor
-			$can_view = $WC_MLM->vendors->is_vendor( get_current_user_id() );
+			$can_view = WC_MLM_Vendors::is_vendor( get_current_user_id() );
 
 			// Not the current user's vendor page
 			if ( $vendor->ID != $current_user_vendor->ID ) {
 
 				// Not a descendant
-				if ( ! in_array( $vendor->ID, $current_user_vendor_descendants ) ) {
-					$can_view = false;
-				}
+				$can_view = $vendor->is_descendant( $current_user_vendor->ID );
 			}
 		}
 
@@ -123,143 +131,16 @@ class WC_MLM_Reporting {
 			return;
 		}
 
-		require_once __DIR__ . '/class-wc-mlm-report.php';
-		wp_enqueue_script( 'jquery-ui-datepicker' );
-		wp_enqueue_style( 'wc-mlm-jquery-ui-style' );
-
-		$this->page_title .= ': Report';
-
-		// Date query
-		$date_query = array();
-		$date_from  = array();
-		$date_to    = array();
-
-		if ( isset( $_GET['vendor-report-period-from'] ) ) {
-
-			$date_from = explode( '_', $_GET['vendor-report-period-from'] );
-
-			$date_query['after'] = array(
-				'month' => $date_from[0],
-				'day'   => $date_from[1],
-				'year'  => $date_from[2],
-			);
+		switch ( $action ) {
+			case 'vendor_report':
+				include_once __DIR__ . '/views/html-vendor-report.php';
+				$this->page_title .= '<br/><small><a href="' . $vendor->get_admin_url( 'modify' ) . '" class="button">(Modify Vendor)</a>
+</small>';
+				break;
+			case 'modify':
+				include_once __DIR__ . '/views/html-vendor-modify.php';
+				break;
 		}
-
-		if ( isset( $_GET['vendor-report-period-to'] ) ) {
-
-			$date_to = explode( '_', $_GET['vendor-report-period-to'] );
-
-			$date_query['before'] = array(
-				'month' => $date_to[0],
-				'day'   => $date_to[1],
-				'year'  => $date_to[2],
-			);
-		}
-
-		$report = new WC_MLM_Report(
-			'vendor',
-			$vendor,
-			$date_query
-		);
-
-		ob_start();
-		?>
-		<div class="woocommerce wc-mlm-report">
-
-			<form class="wc-mlm-report-actions" method="get">
-				<label>
-					From
-					<input type="text" class="vendor-report-period-from"
-					       value="<?php echo implode( '/', $date_from ); ?>"/>
-					<input type="hidden" name="vendor-report-period-from"/>
-				</label>
-
-				<label>
-					To
-					<input type="text" class="vendor-report-period-to"
-					       value="<?php echo implode( '/', $date_to ); ?>"/>
-					<input type="hidden" name="vendor-report-period-to"/>
-				</label>
-
-				<input type="submit" value="Go"/>
-			</form>
-
-			<p class="total-sales">
-				<strong>Total Sales:</strong> <?php echo wc_price( $report->total_sales ); ?>
-			</p>
-
-			<p class="total-commission">
-				<strong>Total Pending
-					Commission:</strong> <?php echo wc_price( $report->total_commission['pending'] ); ?>
-				<br/>
-				<strong>Total Final Commission:</strong> <?php echo wc_price( $report->total_commission['final'] ); ?>
-			</p>
-
-			<?php if ( ! empty( $report->products ) ) : ?>
-
-				<h3>Products</h3>
-
-				<table class="vendor-report-descendants shop_table">
-					<thead>
-					<tr>
-						<th>
-							Product
-						</th>
-						<th>
-							Price
-						</th>
-						<th>
-							Commission
-						</th>
-					</tr>
-					</thead>
-
-					<tbody>
-					<?php
-					foreach ( $report->items as $item ) :
-						$product = $report->products[ (int) $item['item_meta']['_product_id'][0] ];
-						?>
-
-						<tr>
-							<td>
-								<a href="<?php echo get_permalink( $product->ID ); ?>">
-									<?php echo get_the_title( $product->ID ); ?>
-								</a>
-							</td>
-
-							<td>
-								<?php echo wc_price( $item['line_total'] ); ?>
-							</td>
-
-							<td>
-								<?php
-								$percentage = (int) $WC_MLM->vendors->commission_tiers[ $vendor->commission_tier ]['percentage'] / 100;
-								echo wc_price(
-									(int) $item['line_total'] * $percentage
-								);
-								?>
-							</td>
-						</tr>
-
-					<?php endforeach; ?>
-					</tbody>
-				</table>
-
-			<?php endif; ?>
-
-			<?php if ( $descendants = $vendor->get_descendants() ) : ?>
-
-				<h3>Your Vendors</h3>
-
-				<?php array_walk( $descendants, array( $this, 'output_vendor_descendants' ) ); ?>
-
-			<?php endif; ?>
-		</div>
-
-		<?php
-		$html = ob_get_clean();
-
-		$this->page_content = $html;
 
 		add_action( 'the_title', array( $this, '_report_page_title' ), 9999 );
 		add_action( 'the_content', array( $this, '_report_page_content' ), 9999 );
@@ -278,6 +159,10 @@ class WC_MLM_Reporting {
 		}
 
 		$vendor = $WC_MLM->vendors->get_vendor( $user_ID );
+
+		if ( ! $vendor ) {
+			return;
+		}
 		?>
 		<ul class="<?php echo $depth === 1 ? 'vendor-descendants' : 'vendor-descendants-sub'; ?>">
 			<li>
@@ -310,30 +195,35 @@ class WC_MLM_Reporting {
 		return $this->page_content;
 	}
 
-	function _sales_leader_report_page() {
+	function _add_vendor_report( $reports ) {
 
-		$hook = add_menu_page(
-			'Sales Report',
-			'Sales Report',
-			'manage_options',
-			'sales-leader-report',
-			array( $this, '_sales_leader_report_page_output' ),
-			'dashicons-businessman',
-			58
+
+		$reports['vendors'] = array(
+			'title'  => 'Vendors',
+			'reports' => array(
+				"vendors" => array(
+					'title'       => 'Vendors',
+					'description' => 'A basic rundown of all vendors.',
+					'callback'    => array( $this, '_vendor_report_output' )
+				),
+			),
 		);
 
-		//		add_action( 'admin_print_styles-' . $hook, array( $this, '_sales_leader_report_styles' ) );
-		add_action( 'admin_print_scripts-' . $hook, array( $this, '_sales_leader_report_scripts' ) );
+		return $reports;
 	}
 
-	function _sales_leader_report_scripts() {
+	function _vendor_report_scripts() {
 
-		wp_enqueue_script( 'jquery-ui-datepicker' );
-		wp_enqueue_script( 'wc-mlm-reporting' );
-		wp_enqueue_style( 'wc-mlm-jquery-ui-style' );
+		$screen = get_current_screen();
+
+		if ( $screen->id == 'woocommerce_page_wc-reports' && isset( $_GET['tab'] ) && $_GET['tab'] == 'vendors' ) {
+			wp_enqueue_script( 'jquery-ui-datepicker' );
+			wp_enqueue_script( 'wc-mlm-reporting' );
+			wp_enqueue_style( 'wc-mlm-jquery-ui-style' );
+		}
 	}
 
-	function _sales_leader_report_page_output() {
+	function _vendor_report_output() {
 
 		// TODO Use WC reporting views via hacks like this
 		/*
@@ -353,7 +243,7 @@ class WC_MLM_Reporting {
 		WC_Admin_Reports::get_report( 'sales_by_product' );
 		*/
 
-		global $WC_MLM, $wc_mlm_sales_leader_report_table;
+		global $wc_mlm_sales_leader_report_table;
 
 		require_once __DIR__ . '/class-wc-mlm-report.php';
 
@@ -384,168 +274,96 @@ class WC_MLM_Reporting {
 			);
 		}
 
-		$vendors = $WC_MLM->vendors->get_vendors();
+		$vendors = WC_MLM_Vendors::get_vendors();
 
-
-		$report_table = array(
-			'head' => array(),
-			'body' => array(),
-		);
-
-		$report_table['head'] = array(
+		require_once __DIR__ . '/class-wc-mlm-report-table.php';
+		$report_table = new WC_MLM_ReportTable( array(
 			'vendor'             => array(
-				'label' => 'Vendor',
-				'type'  => 'name',
-				'order' => 'char',
+				'label'        => 'Vendor',
+				'type'         => 'name',
+				'order'        => 'char',
 				'orderdefault' => 'asc',
 			),
 			'total_sales'        => array(
-				'label' => 'Total Sales',
-				'type'  => 'price',
-				'order' => 'int',
+				'label'        => 'Total Sales',
+				'type'         => 'price',
+				'order'        => 'int',
 				'orderdefault' => 'desc',
 			),
 			'commission_pending' => array(
-				'label' => 'Commission (Pending)',
-				'type'  => 'price',
-				'order' => 'int',
+				'label'        => 'Commission (Pending)',
+				'type'         => 'price',
+				'order'        => 'int',
 				'orderdefault' => 'desc',
 			),
 			'commission_final'   => array(
-				'label' => 'Commission (Final)',
-				'type'  => 'price',
-				'order' => 'int',
+				'label'        => 'Commission (Final)',
+				'type'         => 'price',
+				'order'        => 'int',
 				'orderdefault' => 'desc',
 			),
-		);
+		), 'vendor' );
+
+		$total_cos = 0;
 
 		if ( $vendors ) {
 
 			foreach ( $vendors as $vendor ) {
 				$report = new WC_MLM_Report( 'vendor', $vendor, $date_query );
 
-				$report_table['body'][] = array(
+				$report_table->add_row( array(
 					'vendor'             => $vendor->name,
-					'total_sales'        => (int) $report->total_sales,
-					'commission_pending' => (int) $report->total_commission['pending'],
-					'commission_final'   => (int) $report->total_commission['final'],
-				);
+					'total_sales'        => (int) $report->sales,
+					'commission_pending' => (int) $report->commission['pending'],
+					'commission_final'   => (int) $report->commission['final'],
+				));
+
+				$total_cos = $total_cos + $report->cos;
 			}
 		}
 
-		$wc_mlm_sales_leader_report_table = $report_table;
-
-		usort( $report_table['body'], function ( $a, $b ) {
-
-			global $wc_mlm_sales_leader_report_table;
-
-			$orderby = isset( $_GET['orderby'] ) ? $_GET['orderby'] : 'vendor';
-			$order   = isset( $_GET['order'] ) ? $_GET['order'] : 'desc';
-
-			// Flip $a and $b
-			if ( $order == 'desc' ) {
-				$c = $a;
-				$a = $b;
-				$b = $c;
-			}
-
-			switch ( $wc_mlm_sales_leader_report_table['head'][ $orderby ]['order'] ) {
-				case 'char':
-					return strcasecmp( $a[ $orderby ], $b[ $orderby ] );
-					break;
-
-				case 'int':
-				default:
-					return $a[ $orderby ] - $b[ $orderby ];
-					break;
-			}
-		} );
+		// Custom footer
+		ob_start();
 		?>
-		<div class="wrap">
+		<tr>
+			<?php foreach ( $report_table->columns as $column_ID => $column ) : ?>
 
-			<h2>Sales Report</h2>
+				<th>
+					<?php
+					if ( $column['order'] == 'int' ) {
+						$total = 0;
+						foreach ( $report_table->body as $row ) {
+							$total = $total + $row[ $column_ID ];
+						}
 
-			<div class="wc-mlm-report sales-leader-report">
-				<form class="wc-mlm-report-actions" method="get">
+						echo $column['type'] == 'price' ? wc_price( $total ) : $total;
+					} elseif ( $column_ID == $report_table->default_orderby ) {
+						echo 'Total:';
+					}
+					?>
+				</th>
 
-					<input type="hidden" name="page" value="<?php echo $_GET['page']; ?>"/>
+			<?php endforeach; ?>
+		</tr>
+		<?php
+		$report_table->custom_footer( ob_get_clean() );
 
-					<label>
-						From
-						<input type="text" class="vendor-report-period-from"
-						       value="<?php echo implode( '/', $date_from ); ?>"/>
-						<input type="hidden" name="vendor-report-period-from"/>
-					</label>
+		include_once __DIR__ . '/views/html-sales-leader-report.php';
+	}
 
-					<label>
-						To
-						<input type="text" class="vendor-report-period-to"
-						       value="<?php echo implode( '/', $date_to ); ?>"/>
-						<input type="hidden" name="vendor-report-period-to"/>
-					</label>
+	public static function show_vendor_messages( $messages = array() ) {
 
-					<input type="submit" class="button" value="Go"/>
-				</form>
+		$user_messages = get_user_meta( get_current_user_id(), '_vendor_edit_messages', true );
+		$user_messages = $user_messages ? $user_messages : array();
+		$messages = array_merge( $messages, $user_messages );
 
-				<?php if ( $report_table ) : ?>
+		if ( $messages ) {
 
-					<table class="wc-mlm-sales-leader-report">
+			foreach ( $messages as $message ) {
+				wc_print_notice( $message['message'], $message['type'] );
+			}
 
-						<thead>
-						<tr>
-							<?php
-							foreach ( $report_table['head'] as $head_ID => $head ) :
-								$sorted = isset( $_GET['orderby'] ) && $_GET['orderby'] == $head_ID;
-								$order  = isset( $_GET['order'] ) ? $_GET['order'] : $head['orderdefault'];
-								?>
-								<th class="sortable <?php echo "$head_ID $order"; echo $sorted ? ' sorted' : '' ?>">
-
-									<?php
-									$link = add_query_arg( array(
-										'order' => $sorted ? $order : $head['orderdefault'],
-										'orderby' => $head_ID,
-									));
-									?>
-									<a href="<?php echo $link; ?>">
-										<span class="title"><?php echo $head['label']; ?></span>
-										<span class="sorting-indicator"></span>
-									</a>
-								</th>
-							<?php endforeach; ?>
-						</tr>
-						</thead>
-
-						<tbody>
-
-						<?php foreach ( $report_table['body'] as $row ) : ?>
-							<tr>
-
-								<?php foreach ( $row as $row_ID => $cell ) : ?>
-									<td>
-										<?php
-										switch ( $report_table['head'][ $row_ID ]['type'] ) {
-											case 'name':
-												echo $cell;
-												break;
-
-											case 'price':
-												echo wc_price( $cell );
-												break;
-										}
-										?>
-									</td>
-								<?php endforeach; ?>
-
-							</tr>
-						<?php endforeach; ?>
-
-						</tbody>
-
-					</table>
-
-				<?php endif; ?>
-			</div>
-		</div>
-	<?php
+			delete_user_meta( get_current_user_id(), '_vendor_edit_messages' );
+		}
 	}
 }

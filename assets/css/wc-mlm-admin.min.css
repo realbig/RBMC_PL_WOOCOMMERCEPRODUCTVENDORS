@@ -1,13 +1,35 @@
 .wc-mlm-sales-leader-report {
   width: 100%;
-  max-width: 1000px;
-  border-collapse: collapse; }
+  max-width: 1000px; }
+  .wc-mlm-sales-leader-report table {
+    border-collapse: collapse;
+    width: 100%; }
   .wc-mlm-sales-leader-report th {
     text-align: left;
     font-size: 1.2em;
     border-bottom: 1px solid #ccc;
-    padding-bottom: 10px;
+    padding-bottom: 5px;
     width: 25%; }
   .wc-mlm-sales-leader-report tbody tr:first-of-type td {
-    padding-top: 10px; }
+    padding-top: 5px; }
+  .wc-mlm-sales-leader-report tbody td:first-of-type {
+    font-weight: bold; }
+  .wc-mlm-sales-leader-report .wc-mlm-table-title {
+    text-align: center;
+    text-transform: uppercase; }
+
+.wc-mlm-vendor-actions .button {
+  padding-left: 0;
+  padding-right: 0;
+  width: 30px;
+  text-align: center;
+  font-size: 20px;
+  margin-right: 10px;
+  box-shadow: none !important; }
+  .wc-mlm-vendor-actions .button:before {
+    display: inline-block; }
+  .wc-mlm-vendor-actions .button.wc-mlm-approve {
+    background-color: #a1ffae; }
+  .wc-mlm-vendor-actions .button.wc-mlm-delete {
+    background-color: #ffa69e; }
 /*# sourceMappingURL=wc-mlm-admin.min.css.map */

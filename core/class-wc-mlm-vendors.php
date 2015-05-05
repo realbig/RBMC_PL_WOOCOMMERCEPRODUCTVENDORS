@@ -9,7 +9,7 @@ class WC_MLM_Vendors {
 
 	public $vendor_role_exists = false;
 
-	public $commission_tiers = array(
+	public static $commission_tiers = array(
 		'1' => array(
 			'name'       => '(20%) Gold',
 			'percentage' => 20,
@@ -24,7 +24,7 @@ class WC_MLM_Vendors {
 		),
 	);
 
-	private $meta_fields = array(
+	public static $meta_fields = array(
 		'_vendor_parent',
 		'_vendor_name',
 		'_vendor_slug',
@@ -48,11 +48,14 @@ class WC_MLM_Vendors {
 		// Create Vendor role
 		add_action( 'init', array( $this, '_create_vendor_role' ) );
 
+		// Flush permalinks on user register as vendor
+		add_action( 'set_user_role', array( $this, 'flush_permalinks' ), 10, 3 );
+
 		// Add extra user fields
 		add_action( 'edit_user_profile', array( $this, '_add_user_vendor_fields' ) );
 
 		// Save extra user fields
-		add_action( 'edit_user_profile_update', array( $this, '_save_user_vendor_fields' ) );
+		add_action( 'edit_user_profile_update', array( __CLASS__, 'save_user_vendor_fields' ) );
 
 		// Create Vendor shop page
 		add_action( 'init', array( $this, '_add_rewrite' ) );
@@ -73,7 +76,7 @@ class WC_MLM_Vendors {
 
 	function _add_cart_table_vendor( $price, $cart_item ) {
 
-		$vendor = $this->get_vendor( $cart_item['vendor'] );
+		$vendor = self::get_vendor( $cart_item['vendor'] );
 		$price .= '</td><td class="product-vendor">' . ( $vendor->name ? $vendor->name : '- NA -' );
 
 		return $price;
@@ -185,7 +188,7 @@ class WC_MLM_Vendors {
 		}
 
 		if ( ! $this->current_vendor_archive ) {
-			$this->current_vendor_archive = $this->get_vendor( $_POST['vendor'] );
+			$this->current_vendor_archive = self::get_vendor( $_POST['vendor'] );
 		}
 
 		$cart_item_data['vendor'] = $this->current_vendor_archive->ID;
@@ -219,6 +222,13 @@ class WC_MLM_Vendors {
 		$this->vendor_role_exists = true;
 	}
 
+	public function flush_permalinks( $user_ID, $role, $old_roles ) {
+
+		if ( $role == 'vendor' ) {
+			update_option( '_wc_mlm_flush_rewrite', 'true' );
+		}
+	}
+
 	/**
 	 * Adds all new Vendor fields to the user edit page.
 	 *
@@ -233,114 +243,7 @@ class WC_MLM_Vendors {
 			return;
 		}
 
-		$current_vendor = $this->get_vendor( $user->ID );
-		?>
-
-		<h3>Vendor Settings</h3>
-
-		<table class="form-table">
-			<tr>
-				<th>
-					<label for="_vendor_parent">Vendor Parent</label>
-				</th>
-
-				<td>
-					<?php
-					$vendor_parent = get_user_meta( $user->ID, '_vendor_parent', true );
-
-					$vendors = get_users( array(
-						'role' => 'vendor',
-					) );
-
-					if ( ! empty( $vendors ) ) {
-						?>
-						<select id="_vendor_parent" name="_vendor_parent">
-							<option value="">- No Parent -</option>
-							<?php
-							foreach ( $vendors as $vendor ) {
-
-								if ( $vendor->ID === $user->ID ) {
-									continue;
-								}
-								?>
-								<option
-									value="<?php echo $vendor->ID; ?>" <?php selected( $vendor->ID, $vendor_parent ); ?>>
-									<?php echo $vendor->display_name; ?>
-								</option>
-							<?php
-							}
-							?>
-						</select>
-					<?php
-					}
-					?>
-				</td>
-			</tr>
-
-			<tr>
-				<th>
-					<label for="_vendor_name">Vendor Name</label>
-				</th>
-
-				<td>
-					<input type="text" id="_vendor_name" name="_vendor_name" class="regular-text"
-					       value="<?php echo esc_attr( $current_vendor->name ); ?>"/>
-				</td>
-			</tr>
-
-			<tr>
-				<th>
-					<label for="_vendor_slug">Vendor URL</label>
-				</th>
-
-				<td>
-					<code><?php echo get_permalink( wc_get_page_id( 'shop' ) ); ?></code>
-					<input type="text" id="_vendor_slug"
-					       name="_vendor_slug" class="regular-text"
-					       value="<?php echo $current_vendor->slug; ?>"/>
-				</td>
-			</tr>
-
-			<tr>
-				<th>
-					<label for="_vendor_email">Vendor Email</label>
-				</th>
-
-				<td>
-					<input type="text" id="_vendor_email" name="_vendor_email" class="regular-text"
-					       value="<?php echo esc_attr( $current_vendor->email ); ?>"/>
-				</td>
-			</tr>
-
-			<tr>
-				<th>
-					<label for="_vendor_phone">Vendor Phone Number</label>
-				</th>
-
-				<td>
-					<input type="text" id="_vendor_phone" name="_vendor_phone" class="regular-text"
-					       value="<?php echo esc_attr( $current_vendor->phone ); ?>"/>
-				</td>
-			</tr>
-
-			<tr>
-				<th>
-					<label for="_vendor_commission_tier">Vendor Commission Tier</label>
-				</th>
-
-				<td>
-					<select id="_vendor_commission_tier" name="_vendor_commission_tier">
-						<?php foreach ( $this->commission_tiers as $tier_ID => $tier ) : ?>
-							<option
-								value="<?php echo $tier_ID; ?>" <?php selected( $current_vendor->commission_tier, $tier_ID ); ?>>
-								<?php echo $tier['name']; ?>
-							</option>
-						<?php endforeach; ?>
-					</select>
-				</td>
-			</tr>
-		</table>
-	<?php
+		include_once __DIR__ . '/views/html-vendor-user-edit.php';
 	}
 
 	/**
@@ -348,9 +251,18 @@ class WC_MLM_Vendors {
 	 *
 	 * @param $user_ID int The currently being updated user ID.
 	 */
-	function _update_vendor_children( $user_ID ) {
+	static function _update_vendor_children( $user_ID ) {
+
+		$current_parent = get_user_meta( $user_ID, '_vendor_parent', true );
 
 		if ( isset( $_POST['_vendor_parent'] ) && ! empty( $_POST['_vendor_parent'] ) ) {
+
+			// If we're switching parents, make sure to delete the reference in the current parent
+			if ( $current_parent && $current_parent != $_POST['_vendor_parent'] ) {
+				$current_parent_children = get_user_meta( $current_parent, '_vendor_children', true );
+				unset( $current_parent_children[ $user_ID ] );
+				update_user_meta( $current_parent, '_vendor_children', $current_parent_children );
+			}
 
 			$current_children = get_user_meta( $_POST['_vendor_parent'], '_vendor_children', true );
 			$current_children = ! empty( $current_children ) ? $current_children : array();
@@ -361,17 +273,14 @@ class WC_MLM_Vendors {
 
 			update_user_meta( $_POST['_vendor_parent'], '_vendor_children', $current_children );
 
-		} else {
+		} elseif ( $current_parent ) {
 
-			if ( $current_parent = get_user_meta( $user_ID, '_vendor_parent', true ) ) {
+			$current_children = get_user_meta( $current_parent, '_vendor_children', true );
+			$current_children = ! empty( $current_children ) ? $current_children : array();
 
-				$current_children = get_user_meta( $current_parent, '_vendor_children', true );
-				$current_children = ! empty( $current_children ) ? $current_children : array();
+			unset( $current_children[ $user_ID ] );
 
-				unset( $current_children[ $user_ID ] );
-
-				update_user_meta( $current_parent, '_vendor_children', $current_children );
-			}
+			update_user_meta( $current_parent, '_vendor_children', $current_children );
 		}
 	}
 
@@ -382,33 +291,13 @@ class WC_MLM_Vendors {
 	 *
 	 * @param $user_ID int The currently being updated user ID.
 	 */
-	function _save_user_vendor_fields( $user_ID ) {
+	public static function save_user_vendor_fields( $user_ID ) {
 
-		$user = get_user_by( 'id', $user_ID );
-
-		if ( in_array( 'vendor', $user->roles ) ) {
-
-			// Slug is required
-//			if ( ! isset( $_POST['_vendor_slug'] ) || empty( $_POST['_vendor_slug'] ) ) {
-//				$current_vendor        = $this->get_vendor( $user_ID );
-//				$_POST['_vendor_slug'] = $current_vendor->slug;
-//			}
-//
-//			// Tier is required
-//			if ( ! isset( $_POST['_vendor_commission_tier'] ) || empty( $_POST['_vendor_commission_tier'] ) ) {
-//
-//				$tiers = $this->commission_tiers;
-//				end( $tiers );
-//				$tier_ID                          = key( $tiers );
-//				$_POST['_vendor_commission_tier'] = $tier_ID;
-//			}
-		}
-
-		foreach ( $this->meta_fields as $meta ) {
+		foreach ( self::$meta_fields as $meta ) {
 
 			// Update parent's meta to reflect the child
 			if ( $meta == '_vendor_parent' ) {
-				$this->_update_vendor_children( $user_ID );
+				self::_update_vendor_children( $user_ID );
 			}
 
 			if ( isset( $_POST[ $meta ] ) && ! empty( $_POST[ $meta ] ) ) {
@@ -426,14 +315,14 @@ class WC_MLM_Vendors {
 	 */
 	function _add_rewrite() {
 
-		global $WC_MLM, $wp_taxonomies;
+		global $wp_taxonomies;
 
 		add_rewrite_tag( '%vendor%', '([^&]+)' );
 
-		$vendors_regex = $WC_MLM->vendors->get_vendor_slugs_regex();
+		$vendors_regex = self::get_vendor_slugs_regex();
 
 		// Base vendor page
-		add_rewrite_rule( "shop/{$vendors_regex}/?$", 'index.php?post_type=product&vendor=$matches[1]', 'top' );
+		add_rewrite_rule( "shop/{$vendors_regex}/?$", 'index.php?post_type=product&vendor=$matches[1]&vendor_action=shop', 'top' );
 
 		// Vendor taxonomy pages
 		$taxonomies = get_object_taxonomies( 'product' );
@@ -444,13 +333,18 @@ class WC_MLM_Vendors {
 
 			add_rewrite_rule(
 				"shop/{$vendors_regex}/{$slug}/([^/]+)/?$",
-				'index.php?post_type=product&taxonomy=' . $tax . '&term=$matches[2]&vendor=$matches[1]',
+				'index.php?post_type=product&taxonomy=' . $tax . '&term=$matches[2]&vendor=$matches[1]&vendor_action=shop',
 				'top'
 			);
 		}
 
 		// Vendor single product
-		add_rewrite_rule( "shop/{$vendors_regex}/([^/]+)/?$", 'index.php?post_type=product&name=$matches[2]&vendor=$matches[1]', 'top' );
+		add_rewrite_rule( "shop/{$vendors_regex}/([^/]+)/?$", 'index.php?post_type=product&name=$matches[2]&vendor=$matches[1]&vendor_action=shop', 'top' );
+
+		if ( get_option( '_wc_mlm_flush_rewrite' ) ) {
+			flush_rewrite_rules();
+			delete_option( '_wc_mlm_flush_rewwrite' );
+		}
 	}
 
 	/**
@@ -462,6 +356,10 @@ class WC_MLM_Vendors {
 
 		global $wp_query;
 
+		if ( ! isset( $wp_query->query_vars['vendor_action'] ) || $wp_query->query_vars['vendor_action'] != 'shop' ) {
+			return;
+		}
+
 		$vendor_slug = isset( $wp_query->query_vars['vendor'] ) ? $wp_query->query_vars['vendor'] : false;
 
 		// Not on a vendor slug
@@ -469,7 +367,7 @@ class WC_MLM_Vendors {
 			return;
 		}
 
-		$vendors      = $this->get_vendors();
+		$vendors      = self::get_vendors();
 		$vendor_slugs = wp_list_pluck( $vendors, 'slug' );
 
 		// If vendor is ID, change to slug
@@ -477,8 +375,20 @@ class WC_MLM_Vendors {
 			$vendor_slug = $vendor_slugs[ $vendor_slug ];
 		}
 
+		$disabled = false;
+
 		// Slug does not match existing vendor
 		if ( ! in_array( $vendor_slug, $vendor_slugs ) ) {
+			$disabled = true;
+		}
+
+		$this->current_vendor_archive = self::get_vendor_by_slug( $vendor_slug );
+
+		if ( ! $this->current_vendor_archive->active ) {
+			$disabled = true;
+		}
+
+		if ( $disabled ) {
 
 			// Disable post display
 			$wp_query->post_count = 0;
@@ -487,11 +397,10 @@ class WC_MLM_Vendors {
 			return;
 		}
 
-		$this->current_vendor_archive = $this->get_vendor_by_slug( $vendor_slug );
-
 		add_action( 'woocommerce_before_main_content', array( $this, '_vendor_page_description' ), 30 );
 
 		add_filter( 'the_permalink', array( $this, '_product_link_add_vendor' ) );
+		add_filter( 'woocommerce_product_add_to_cart_url', array( $this, '_product_link_add_vendor' ) );
 	}
 
 	function _product_link_add_vendor() {
@@ -545,11 +454,11 @@ class WC_MLM_Vendors {
 		wc_print_notice( 'This Vendor does not exist.', 'error' );
 	}
 
-	public function is_vendor( $user_ID ) {
+	public static function is_vendor( $user_ID ) {
 		return user_can( $user_ID, 'is_vendor' );
 	}
 
-	public function get_vendors() {
+	public static function get_vendors() {
 
 		$users = get_users( array(
 			'role' => 'vendor',
@@ -562,13 +471,13 @@ class WC_MLM_Vendors {
 		$vendors = array();
 
 		foreach ( $users as $user ) {
-			$vendors[ $user->ID ] = $this->get_vendor( $user->ID );
+			$vendors[ $user->ID ] = self::get_vendor( $user->ID );
 		}
 
 		return $vendors;
 	}
 
-	public function get_vendor( $user_ID ) {
+	public static function get_vendor( $user_ID ) {
 
 		if ( ! user_can( $user_ID, 'is_vendor' ) ) {
 			return false;
@@ -579,7 +488,7 @@ class WC_MLM_Vendors {
 		return new WC_MLM_Vendor( $user_ID );
 	}
 
-	public function get_vendor_by_slug( $slug ) {
+	public static function get_vendor_by_slug( $slug ) {
 
 		$users = get_users( array(
 			'meta_key'   => '_vendor_slug',
@@ -592,14 +501,12 @@ class WC_MLM_Vendors {
 
 		$user = array_shift( $users );
 
-		return $this->get_vendor( $user->ID );
+		return self::get_vendor( $user->ID );
 	}
 
-	public function get_vendor_slugs_regex() {
+	public static function get_vendor_slugs_regex() {
 
-		global $WC_MLM;
-
-		$vendors      = $WC_MLM->vendors->get_vendors();
+		$vendors      = self::get_vendors();
 		$vendor_slugs = wp_list_pluck( $vendors, 'slug' );
 
 		$vendors_regex = '(';

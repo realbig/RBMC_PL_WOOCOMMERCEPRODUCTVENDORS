@@ -1,21 +1,34 @@
 .wc-mlm-sales-leader-report {
   width: 100%;
   max-width: 1000px;
-  border-collapse: collapse;
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
 
   th {
     text-align: left;
     font-size: 1.2em;
     border-bottom: 1px solid #ccc;
-    padding-bottom: 10px;
+    padding-bottom: 5px;
     width: 25%;
   }
 
   tbody {
     tr:first-of-type {
       td {
-        padding-top: 10px;
+        padding-top: 5px;
       }
     }
+
+    td:first-of-type {
+      font-weight: bold;
+    }
+  }
+
+  .wc-mlm-table-title {
+    text-align: center;
+    text-transform: uppercase;
   }
 }
