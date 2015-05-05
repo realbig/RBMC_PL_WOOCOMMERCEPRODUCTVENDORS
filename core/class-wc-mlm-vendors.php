@@ -222,8 +222,7 @@ class WC_MLM_Vendors {
 			remove_role( 'vendor' );
 		}
 
-		// TODO Set actual capabilities
-		$capabilities              = $all_roles['editor']['capabilities'];
+		$capabilities              = $all_roles['subscriber']['capabilities'];
 		$capabilities['is_vendor'] = true;
 
 		add_role( 'vendor', _wc_mlm_setting( 'vendor_verbage' ), $capabilities );
@@ -523,7 +522,7 @@ class WC_MLM_Vendors {
 
 			$i ++;
 
-			$vendors_regex .= $slug . ( $i < count( $vendor_slugs ) ? '|' : '' );
+			$vendors_regex .= preg_quote( $slug ) . ( $i < count( $vendor_slugs ) ? '|' : '' );
 		}
 
 		$vendors_regex .= ')';

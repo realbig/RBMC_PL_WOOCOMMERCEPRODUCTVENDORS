@@ -8,11 +8,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die();
 }
 
-$this->page_title .= ': Report';
-
 require_once WC_MLM_PATH . '/core/class-wc-mlm-report.php';
-wp_enqueue_script( 'jquery-ui-datepicker' );
-wp_enqueue_style( 'wc-mlm-jquery-ui-style' );
 
 // Date query
 $date_query = array();
@@ -44,8 +40,6 @@ $vendor_descedants = $vendor->get_descendants();
 
 $sales_bonus = $vendor->get_sales_bonus( $date_query );
 
-ob_start();
-var_dump( $date_query );
 ?>
 	<div class="clear"></div>
 
@@ -194,8 +188,3 @@ var_dump( $date_query );
 
 		<?php endif; ?>
 	</div>
-
-<?php
-$html = ob_get_clean();
-
-$this->page_content = $html;

@@ -11,21 +11,6 @@ define( 'WC_MLM_VERSION', '0.1.0' );
 define( 'WC_MLM_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WC_MLM_URL', plugins_url( '', __FILE__ ) );
 
-// REMOVE
-add_action( 'wp_head', function () {
-	?>
-	<style>
-		/*.xdebug-var-dump {*/
-			/*position: absolute;*/
-			/*width: 50%;*/
-			/*background: #fff;*/
-			/*z-index: 100000000;*/
-		/*}*/
-	</style>
-<?php
-});
-
-
 /**
  * Class WC_MLM_Reporting
  *

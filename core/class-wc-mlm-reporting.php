@@ -63,12 +63,10 @@ class WC_MLM_Reporting {
 
 		global $WC_MLM;
 
-		$vendors_regex = WC_MLM_Vendors::get_vendor_slugs_regex();
-
 		add_rewrite_tag( '%vendor_action%', '([^&]+)' );
 
 		add_rewrite_rule(
-			_wc_mlm_setting( 'vendor_slug' ) . "/{$vendors_regex}/?([^/]+)?$",
+			_wc_mlm_setting( 'vendor_slug' ) . "/([^/]+)/?([^/]+)?$",
 			'index.php?vendor=$matches[1]&vendor_action=$matches[2]&page_id=' . $WC_MLM->pages['reporting'],
 			'top'
 		);
@@ -106,7 +104,7 @@ class WC_MLM_Reporting {
 		// Security check
 		$can_view = true;
 
-		$current_user_vendor = get_current_user_id() != $vendor->ID ? WC_MLM_Vendors::get_vendor( get_current_user_id() ) : $vendor;
+		$current_user_vendor             = get_current_user_id() != $vendor->ID ? WC_MLM_Vendors::get_vendor( get_current_user_id() ) : $vendor;
 		$current_user_vendor_descendants = $current_user_vendor !== false ? $current_user_vendor->get_descendants() : false;
 
 		// Admins automatically can view
@@ -144,7 +142,7 @@ class WC_MLM_Reporting {
 			$modification = WC_MLM_VendorModifications::get_verbage( $modification );
 
 			$this->messages[] = array(
-				'type' => 'error',
+				'type'    => 'error',
 				'message' => 'Pending change from ' . $modification['instigator'] . '<br/><strong>' . $modification['type'] . ':</strong> <em>' . $modification['old_value'] . '</em> to <em>' . $modification['new_value'] . '</em>.',
 			);
 		}
@@ -152,14 +150,97 @@ class WC_MLM_Reporting {
 		add_filter( 'vendor_messages', array( $this, '_report_page_messages' ) );
 
 		switch ( $action ) {
+
 			case 'vendor_report':
-				include_once __DIR__ . '/views/html-vendor-report.php';
+
+				$this->page_title .= ': Report';
+
 				$this->page_title = get_avatar( $vendor->ID, 300, '', '', array( 'class' => 'vendor-report-title-avatar' ) ) . $this->page_title;
 				$this->page_title .= '<br/><small><a href="' . $vendor->get_admin_url( 'modify' ) . '" class="button">(Modify ' . _wc_mlm_setting( 'vendor_verbage' ) . ')</a>
 </small>';
+
+				ob_start();
+				include_once __DIR__ . '/views/html-vendor-report.php';
+				$this->page_content = ob_get_clean();
+
 				break;
+
 			case 'modify':
+
+				$this->page_title .= ': Edit';
+
+				// Update vendor
+				if ( isset( $_POST['vendor-frontend-modify'] ) && wp_verify_nonce( $_REQUEST['_wpnonce'], 'update-vendor_' . $vendor->ID ) ) {
+
+					if ( current_user_can( 'manage_options' ) || get_current_user_id() == $vendor->ID ) {
+
+						update_user_meta( get_current_user_id(), '_vendor_edit_messages', array(
+							array(
+								'type'    => 'success',
+								'message' => _wc_mlm_setting( 'vendor_verbage' ) . ' changes successful.',
+							)
+						) );
+
+						WC_MLM_Vendors::save_user_vendor_fields( $vendor->ID );
+
+					} else {
+
+						update_user_meta( get_current_user_id(), '_vendor_edit_messages', array(
+							array(
+								'type'    => 'notice',
+								'message' => _wc_mlm_setting( 'vendor_verbage' ) . ' changes sent for approval.',
+							)
+						) );
+
+						foreach ( WC_MLM_VendorModifications::$available_modifications as $type => $info ) {
+
+							WC_MLM_VendorModifications::add_modification( array(
+								'type'       => $type,
+								'instigator' => get_current_user_id(),
+								'victim'     => $vendor->ID,
+								'old_value'  => get_user_meta( $vendor->ID, "_vendor_$type", true ),
+								'new_value'  => isset( $_POST["_vendor_$type"] ) ? $_POST["_vendor_$type"] : '',
+							) );
+						}
+					}
+
+					// Get vendor slug again, just in-case the slug has changed
+					$vendor->refresh_slug();
+
+					wp_redirect( $vendor->get_admin_url( 'modify' ) );
+					exit;
+				}
+
+				// Delete vendor
+				if ( isset( $_POST['vendor-frontend-delete'] ) && wp_verify_nonce( $_REQUEST['_wpnonce'], 'update-vendor_' . $vendor->ID ) ) {
+
+					if ( current_user_can( 'manage_options' ) || get_current_user_id() == $vendor->ID ) {
+
+						$vendor->delete( $current_user_vendor->ID );
+
+					} else {
+
+						update_user_meta( get_current_user_id(), '_vendor_edit_messages', array(
+							array(
+								'type'    => 'error',
+								'message' => _wc_mlm_setting( 'vendor_verbage' ) . ' deletion sent for approval.',
+							)
+						) );
+
+						WC_MLM_VendorModifications::add_modification( array(
+							'type'       => 'delete',
+							'instigator' => get_current_user_id(),
+							'victim'     => $vendor->ID,
+							'old_value'  => 'Exists',
+							'new_value'  => 'Deleted',
+						) );
+					}
+				}
+
+				ob_start();
 				include_once __DIR__ . '/views/html-vendor-modify.php';
+				$this->page_content = ob_get_clean();
+
 				break;
 		}
 
@@ -227,6 +308,7 @@ class WC_MLM_Reporting {
 	function _report_page_body_classes( $classes ) {
 
 		$classes[] = 'vendor-report';
+
 		return $classes;
 	}
 
@@ -234,7 +316,7 @@ class WC_MLM_Reporting {
 
 
 		$reports['vendors'] = array(
-			'title'  => _wc_mlm_setting( 'vendor_verbage' ) . 's',
+			'title'   => _wc_mlm_setting( 'vendor_verbage' ) . 's',
 			'reports' => array(
 				"vendors" => array(
 					'title'       => _wc_mlm_setting( 'vendor_verbage' ) . 's',
@@ -351,7 +433,7 @@ class WC_MLM_Reporting {
 					'total_sales'        => (int) $report->sales,
 					'commission_pending' => (int) $report->commission['pending'],
 					'commission_final'   => (int) $report->commission['final'],
-				));
+				) );
 
 				$total_cos = $total_cos + $report->cos;
 			}
@@ -390,7 +472,7 @@ class WC_MLM_Reporting {
 
 		$user_messages = get_user_meta( get_current_user_id(), '_vendor_edit_messages', true );
 		$user_messages = $user_messages ? $user_messages : array();
-		$messages = array_merge( $messages, $user_messages );
+		$messages      = array_merge( $messages, $user_messages );
 
 		$messages = apply_filters( 'vendor_messages', $messages );
 
