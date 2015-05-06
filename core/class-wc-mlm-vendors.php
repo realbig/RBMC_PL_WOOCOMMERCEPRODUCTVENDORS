@@ -324,12 +324,13 @@ class WC_MLM_Vendors {
 
 		global $wp_taxonomies;
 
+		$shop_page = get_post( wc_get_page_id( 'shop' ) );
+		$shop_slug = $shop_page->post_name;
+
 		add_rewrite_tag( '%vendor%', '([^&]+)' );
 
-		$vendors_regex = self::get_vendor_slugs_regex();
-
 		// Base vendor page
-		add_rewrite_rule( "shop/{$vendors_regex}/?$", 'index.php?post_type=product&vendor=$matches[1]&vendor_action=shop', 'top' );
+		add_rewrite_rule( "{$shop_slug}/([^/]+)/?$", 'index.php?post_type=product&vendor=$matches[1]&vendor_action=shop', 'top' );
 
 		// Vendor taxonomy pages
 		$taxonomies = get_object_taxonomies( 'product' );
@@ -339,14 +340,14 @@ class WC_MLM_Vendors {
 			$slug = isset( $wp_taxonomies[ $tax ]->rewrite['slug'] ) ? $wp_taxonomies[ $tax ]->rewrite['slug'] : $tax;
 
 			add_rewrite_rule(
-				"shop/{$vendors_regex}/{$slug}/([^/]+)/?$",
+				"{$shop_slug}/([^/]+)/{$slug}/([^/]+)/?$",
 				'index.php?post_type=product&taxonomy=' . $tax . '&term=$matches[2]&vendor=$matches[1]&vendor_action=shop',
 				'top'
 			);
 		}
 
 		// Vendor single product
-		add_rewrite_rule( "shop/{$vendors_regex}/([^/]+)/?$", 'index.php?post_type=product&name=$matches[2]&vendor=$matches[1]&vendor_action=shop', 'top' );
+		add_rewrite_rule( "{$shop_slug}/([^/]+)/([^/]+)/?$", 'index.php?post_type=product&name=$matches[2]&vendor=$matches[1]&vendor_action=shop', 'top' );
 
 		if ( get_option( '_wc_mlm_flush_rewrite' ) ) {
 			flush_rewrite_rules();
@@ -407,6 +408,7 @@ class WC_MLM_Vendors {
 		add_action( 'woocommerce_before_main_content', array( $this, '_vendor_page_description' ), 30 );
 
 		add_filter( 'the_permalink', array( $this, '_product_link_add_vendor' ) );
+		add_filter( 'term_link', array( $this, '_product_term_link_add_vendor' ), 10, 3 );
 		add_filter( 'woocommerce_product_add_to_cart_url', array( $this, '_product_link_add_vendor' ) );
 	}
 
@@ -419,6 +421,23 @@ class WC_MLM_Vendors {
 		$permalink .= $post->post_name;
 
 		return $permalink;
+	}
+
+	function _product_term_link_add_vendor( $termlink, $term, $taxonomy  ) {
+
+		global $wp_rewrite;
+
+		// Get taxonomy base
+		$base = $wp_rewrite->get_extra_permastruct($taxonomy);
+		$base = str_replace( "%$taxonomy%", '', $base );
+
+		// Get the current category
+		preg_match( '/([^\/]+)\/?$/', $termlink, $matches );
+		$category = $matches[1];
+
+		$link = $this->current_vendor_archive->get_shop_url() . '/' . $base . '/' . $category;
+
+		return $link;
 	}
 
 	/**
