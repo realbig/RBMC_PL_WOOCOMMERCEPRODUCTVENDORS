@@ -37,13 +37,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 				'orderdefault' => 'asc',
 			),
 			'instigator' => array(
-				'label'        => 'Instigator',
+				'label'        => 'Initiated By',
 				'type'         => 'name',
 				'order'        => 'char',
 				'orderdefault' => 'asc',
 			),
 			'victim'     => array(
-				'label'        => 'Victim',
+				'label'        => 'User Being Modified',
 				'type'         => 'name',
 				'order'        => 'char',
 				'orderdefault' => 'asc',

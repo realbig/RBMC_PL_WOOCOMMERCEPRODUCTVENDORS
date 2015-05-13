@@ -31,14 +31,18 @@ class WC_MLM_Vendors {
 		self::$commission_tiers = array(
 			'1' => array(
 				'name'       => _wc_mlm_setting( 'commission_tier_1' ),
-				'percentage' => 20,
+				'percentage' => 30,
 			),
 			'2' => array(
 				'name'       => _wc_mlm_setting( 'commission_tier_2' ),
-				'percentage' => 15,
+				'percentage' => 20,
 			),
 			'3' => array(
 				'name'       => _wc_mlm_setting( 'commission_tier_3' ),
+				'percentage' => 15,
+			),
+			'4' => array(
+				'name'       => _wc_mlm_setting( 'commission_tier_4' ),
 				'percentage' => 10,
 			),
 		);

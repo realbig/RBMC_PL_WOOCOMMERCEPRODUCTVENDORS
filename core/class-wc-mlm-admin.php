@@ -18,14 +18,18 @@ class WC_MLM_Admin {
 		),
 		'commission_tier_1' => array(
 			'label'   => 'Commission Tier 1 Label',
-			'default' => '(20%) Gold',
+			'default' => '(30%) Platinum',
 		),
 		'commission_tier_2' => array(
 			'label'   => 'Commission Tier 2 Label',
-			'default' => '(15%) Silver',
+			'default' => '(20%) Gold',
 		),
 		'commission_tier_3' => array(
 			'label'   => 'Commission Tier 3 Label',
+			'default' => '(15%) Silver',
+		),
+		'commission_tier_4' => array(
+			'label'   => 'Commission Tier 4 Label',
 			'default' => '(10%) Bronze',
 		),
 	);
@@ -98,6 +102,13 @@ class WC_MLM_Admin {
 		?>
 		<input type="text" name="_wc_mlm_commission_tier_3" id="_wc_mlm_commission_tier_3"
 		       value="<?php echo esc_attr( _wc_mlm_setting( 'commission_tier_3' ) ); ?>"/>
+	<?php
+	}
+
+	function _setting_output_commission_tier_4() {
+		?>
+		<input type="text" name="_wc_mlm_commission_tier_4" id="_wc_mlm_commission_tier_4"
+		       value="<?php echo esc_attr( _wc_mlm_setting( 'commission_tier_4' ) ); ?>"/>
 	<?php
 	}
 }
