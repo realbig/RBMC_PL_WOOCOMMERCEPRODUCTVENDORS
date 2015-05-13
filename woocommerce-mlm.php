@@ -85,6 +85,48 @@ class WC_MLM {
 		add_action( 'init', array( $this, 'register_scripts' ) );
 		add_action( 'wp_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'admin_enqueue_scripts' ) );
+
+		// Activation
+		register_activation_hook( __FILE__, array( $this, '_activate' ) );
+
+		// Deactivation
+		register_deactivation_hook( __FILE__, array( $this, '_deactivate' ) );
+	}
+
+	function _activate() {
+
+		$this->_create_vendor_role();
+	}
+
+	function _deactivate() {
+
+		$this->_delete_vendor_role();
+	}
+
+	function _create_vendor_role() {
+
+		global $wp_roles;
+
+		// Just in case
+		$this->_delete_vendor_role();
+
+		$all_roles = $wp_roles->roles;
+
+		$capabilities              = $all_roles['subscriber']['capabilities'];
+		$capabilities['is_vendor'] = true;
+
+		add_role( 'vendor', _wc_mlm_setting( 'vendor_verbage' ), $capabilities );
+	}
+
+	function _delete_vendor_role() {
+
+		global $wp_roles;
+
+		$all_roles = $wp_roles->roles;
+
+		if ( isset( $all_roles['vendor'] ) ) {
+			remove_role( 'vendor' );
+		}
 	}
 
 	function register_scripts() {

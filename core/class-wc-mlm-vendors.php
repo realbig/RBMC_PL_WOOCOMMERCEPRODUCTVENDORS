@@ -7,8 +7,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class WC_MLM_Vendors {
 
-	public $vendor_role_exists = false;
-
 	public static $commission_tiers = array();
 
 	public static $meta_fields = array(
@@ -51,9 +49,6 @@ class WC_MLM_Vendors {
 	}
 
 	private function _add_actions() {
-
-		// Create Vendor role
-		add_action( 'init', array( $this, '_create_vendor_role' ) );
 
 		// Flush permalinks on user register as vendor
 		add_action( 'set_user_role', array( $this, 'flush_permalinks' ), 10, 3 );
@@ -202,35 +197,6 @@ class WC_MLM_Vendors {
 		$cart_item_data['commission'] = self::$commission_tiers[ $this->current_vendor_archive->commission_tier ]['percentage'];
 
 		return $cart_item_data;
-	}
-
-	/**
-	 * Creates the user "Vendor" role.
-	 *
-	 * @access private
-	 */
-	function _create_vendor_role() {
-
-		global $wp_roles;
-
-		$all_roles = $wp_roles->roles;
-
-		// Don't bother if already created
-		if ( isset( $all_roles['vendor'] ) && _wc_mlm_setting( 'vendor_verbage' ) == $all_roles['vendor']['name'] ) {
-			$this->vendor_role_exists = true;
-
-			return;
-		}
-
-		if ( isset( $all_roles['vendor'] ) ) {
-			remove_role( 'vendor' );
-		}
-
-		$capabilities              = $all_roles['subscriber']['capabilities'];
-		$capabilities['is_vendor'] = true;
-
-		add_role( 'vendor', _wc_mlm_setting( 'vendor_verbage' ), $capabilities );
-		$this->vendor_role_exists = true;
 	}
 
 	public function flush_permalinks( $user_ID, $role, $old_roles ) {

@@ -5,7 +5,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die();
 }
 
-$current_vendor = WC_MLM_Vendors::get_vendor( $user->ID );
+$current_vendor = WC_MLM_Vendors::get_vvendor( $user->ID );
+
+if ( ! $current_vendor ) {
+	return;
+}
 
 $can_view   = current_user_can( 'manage_options' ) || $user->ID == get_current_user_id() || is_admin();
 $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descendant( get_current_user_id() );
