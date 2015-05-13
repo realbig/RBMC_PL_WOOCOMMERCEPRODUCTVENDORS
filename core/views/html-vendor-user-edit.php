@@ -43,8 +43,8 @@ $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descen
 						foreach ( $vendors as $vendor ) {
 
 							// Don't show current user, also don't show descendants
-							if ( $descendants &&
-							     ( $vendor->ID === $user->ID || wc_mlm_array_key_exists_r( $vendor->ID, $descendants ) )
+							if ( ( $descendants && wc_mlm_array_key_exists_r( $vendor->ID, $descendants ) ) ||
+							     $vendor->ID === $user->ID
 							) {
 								continue;
 							}
