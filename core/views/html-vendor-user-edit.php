@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die();
 }
 
-$current_vendor = WC_MLM_Vendors::get_vvendor( $user->ID );
+$current_vendor = WC_MLM_Vendors::get_vendor( $user->ID );
 
 if ( ! $current_vendor ) {
 	return;
