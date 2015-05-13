@@ -119,10 +119,32 @@ class WC_MLM_VendorModifications {
 		$type = WC_MLM_VendorModifications::$available_modifications[ $modification['type'] ]['label'];
 
 		$instigator = WC_MLM_Vendors::get_vendor( $modification['instigator'] );
-		$instigator = $instigator ? $instigator->name : '- NA -';
+		$instigator = $instigator ? $instigator->name : false;
+
+		if ( $instigator === false ) {
+			$user = get_userdata( $modification['instigator'] );
+
+			if ( ! $user ) {
+				$instigator = '- N/A -';
+			} else {
+				$instigator = $user->display_name;
+				$instigator = $instigator ? $instigator : $user->user_nicename;
+			}
+		}
 
 		$victim = WC_MLM_Vendors::get_vendor( $modification['victim'] );
-		$victim = $victim ? $victim->name : '- NA -';
+		$victim = $victim ? $victim->name : false;
+
+		if ( $victim === false ) {
+			$user = get_userdata( $modification['victim'] );
+
+			if ( ! $user ) {
+				$victim = 'User No Longer Exists';
+			} else {
+				$victim = $user->display_name;
+				$victim = $victim ? $victim : $user->user_nicename;
+			}
+		}
 
 		switch ( $modification['type'] ) {
 
