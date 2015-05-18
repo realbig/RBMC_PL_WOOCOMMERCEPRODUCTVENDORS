@@ -10,6 +10,9 @@ class WC_MLM_Vendor {
 	public $ID;
 	public $name;
 	public $slug;
+	public $website;
+	public $description;
+	public $image;
 	public $email;
 	public $phone;
 	public $commission_tier;
@@ -26,7 +29,10 @@ class WC_MLM_Vendor {
 		$this->level           = $this->_get_level();
 		$this->active          = $this->_get_active();
 		$this->email           = get_user_meta( $user_ID, '_vendor_email', true );
+		$this->description     = get_user_meta( $user_ID, '_vendor_description', true );
+		$this->website         = get_user_meta( $user_ID, '_vendor_website', true );
 		$this->phone           = get_user_meta( $user_ID, '_vendor_phone', true );
+		$this->image           = get_user_meta( $user_ID, '_vendor_image', true );
 	}
 
 	private function _get_name() {
@@ -173,10 +179,10 @@ class WC_MLM_Vendor {
 		// Report is only within current month
 		if ( isset( $date_query['after'] ) && isset( $date_query['before'] ) ) {
 
-			$after_month = date( 'm', strtotime( $date_query['after'] ) );
+			$after_month  = date( 'm', strtotime( $date_query['after'] ) );
 			$before_month = date( 'm', strtotime( $date_query['before'] ) );
 
-			if ( (int) $before_month - (int) $after_month > 1) {
+			if ( (int) $before_month - (int) $after_month > 1 ) {
 				return '<br/>Invalid date range';
 			}
 		}

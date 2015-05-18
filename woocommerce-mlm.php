@@ -114,6 +114,7 @@ class WC_MLM {
 
 		$capabilities              = $all_roles['subscriber']['capabilities'];
 		$capabilities['is_vendor'] = true;
+		$capabilities['upload_files'] = true;
 
 		add_role( 'vendor', _wc_mlm_setting( 'vendor_verbage' ), $capabilities );
 	}

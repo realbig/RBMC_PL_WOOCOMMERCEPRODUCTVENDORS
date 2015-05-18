@@ -65,6 +65,7 @@ $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descen
 	<?php endif; ?>
 
 	<?php if ( $can_view ) : ?>
+
 		<tr>
 			<th>
 				<label for="_vendor_name"><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Name</label>
@@ -73,6 +74,95 @@ $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descen
 			<td>
 				<input type="text" id="_vendor_name" name="_vendor_name" class="regular-text"
 				       value="<?php echo esc_attr( $current_vendor->name ); ?>"/>
+			</td>
+		</tr>
+
+		<tr>
+			<th>
+				<label for="_vendor_image"><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Image</label>
+			</th>
+
+			<td>
+				<?php
+				if ( ! is_admin() ) {
+
+					wp_enqueue_media();
+
+					$vendor_image         = $current_vendor->image;
+					$vendor_image_preview = $vendor_image ? wp_get_attachment_image_src( $vendor_image, 'medium' ) : '';
+					?>
+						<img src="<?php echo $vendor_image_preview[0]; ?>" class="image-preview"
+						     style="max-width: 100%; width: 300px;"/>
+						<br/>
+						<input type="hidden" class="image-id" name="_vendor_image"
+						       value="<?php echo $vendor_image; ?>"/>
+						<a class="image-button button">Upload / Choose Image</a>
+					<script type="text/javascript">
+						(function ($) {
+							'use strict';
+
+							$(function () {
+
+								// Instantiates the variable that holds the media library frame.
+								var vendor_image;
+
+								// Runs when the image button is clicked.
+								$('.image-button').click(function (e) {
+
+									var $button = $(this);
+
+									// Prevents the default action from occurring.
+									e.preventDefault();
+
+									// If the frame already exists, re-open it.
+									if (vendor_image) {
+										vendor_image.open();
+										return;
+									}
+
+									// Sets up the media library frame
+									vendor_image = wp.media.frames.vendor_image = wp.media({
+										title: 'Select Author Image',
+										button: {text: 'Use Image'},
+										library: {
+											type: 'image'
+										}
+									});
+
+									// Runs when an image is selected.
+									vendor_image.on('select', function () {
+
+										// Grabs the attachment selection and creates a JSON representation of the model.
+										var media_attachment = vendor_image.state().get('selection').first().toJSON();
+
+										console.log(media_attachment);
+
+										// Sends the attachment URL to our custom image input field.
+										$button.siblings('.image-id').val(media_attachment.id);
+
+										$button.siblings('.image-preview').attr('src', media_attachment.url);
+									});
+
+									// Opens the media library frame.
+									vendor_image.open();
+								});
+							});
+						})(jQuery);
+					</script>
+				<?php
+				}
+				?>
+			</td>
+		</tr>
+
+		<tr>
+			<th>
+				<label for="_vendor_description"><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Description</label>
+			</th>
+
+			<td>
+				<textarea id="_vendor_description" rows="8"
+				          name="_vendor_description"><?php echo $current_vendor->description ; ?></textarea>
 			</td>
 		</tr>
 
@@ -103,9 +193,16 @@ $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descen
 			</td>
 		</tr>
 
-	<?php endif; ?>
+		<tr>
+			<th>
+				<label for="_vendor_website"><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Website</label>
+			</th>
 
-	<?php if ( $can_view ) : ?>
+			<td>
+				<input type="text" id="_vendor_website" name="_vendor_website" class="regular-text"
+				       value="<?php echo esc_attr( $current_vendor->website ); ?>"/>
+			</td>
+		</tr>
 
 		<tr>
 			<th>

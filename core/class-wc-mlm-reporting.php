@@ -18,6 +18,22 @@ class WC_MLM_Reporting {
 	}
 
 	private function _add_actions() {
+//		add_action('pre_get_posts','users_own_attachments');
+//
+//		function users_own_attachments( $wp_query_obj )
+//		{
+//			global $current_user, $pagenow;
+//
+//			if( !is_a( $current_user, 'WP_User') )
+//				return;
+//
+//			if( 'admin-ajax.php' != $pagenow )
+//				return;
+//
+//			$wp_query_obj->set('author', $current_user->ID );
+//
+//			return;
+//		}
 
 		// Setup pages
 		add_action( 'init', array( $this, '_setup_pages' ) );
@@ -292,12 +308,30 @@ class WC_MLM_Reporting {
 		echo '</div>';
 	}
 
-	function _report_page_title() {
-		return $this->page_title;
+	function _report_page_title( $title ) {
+
+		global $WC_MLM;
+
+		$post = get_post( $WC_MLM->pages['reporting'] );
+
+		if ( $post->post_title == $title ) {
+			return $this->page_title;
+		}
+
+		return $title;
 	}
 
-	function _report_page_content() {
-		return $this->page_content;
+	function _report_page_content( $content ) {
+
+		global $WC_MLM;
+
+		$post = get_post( $WC_MLM->pages['reporting'] );
+
+		if ( $post->post_content == $content ) {
+			return $this->page_content;
+		}
+
+		return $content;
 	}
 
 	function _report_page_messages( $messages = array() ) {

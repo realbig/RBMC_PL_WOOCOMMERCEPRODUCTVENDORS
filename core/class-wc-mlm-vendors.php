@@ -13,6 +13,9 @@ class WC_MLM_Vendors {
 		'_vendor_parent',
 		'_vendor_name',
 		'_vendor_slug',
+		'_vendor_description',
+		'_vendor_image',
+		'_vendor_website',
 		'_vendor_email',
 		'_vendor_phone',
 		'_vendor_commission_tier',
@@ -49,6 +52,22 @@ class WC_MLM_Vendors {
 	}
 
 	private function _add_actions() {
+		add_action('pre_get_posts','users_own_attachments');
+
+		function users_own_attachments( $wp_query_obj )
+		{
+			global $current_user, $pagenow;
+
+			if( !is_a( $current_user, 'WP_User') )
+				return;
+
+			if( 'admin-ajax.php' != $pagenow )
+				return;
+
+			$wp_query_obj->set('author', $current_user->id );
+
+			return;
+		}
 
 		// Flush permalinks on user register as vendor
 		add_action( 'set_user_role', array( $this, 'flush_permalinks' ), 10, 3 );
@@ -58,6 +77,10 @@ class WC_MLM_Vendors {
 
 		// Save extra user fields
 		add_action( 'edit_user_profile_update', array( __CLASS__, 'save_user_vendor_fields' ) );
+
+		// Add to toolbar for Vendors
+		add_action( 'show_admin_bar', array( $this, '_show_toolbar' ), 9999 );
+		add_action( 'admin_bar_menu', array( $this, '_add_to_toolbar' ), 9999 );
 
 		// Create Vendor shop page
 		add_action( 'init', array( $this, '_add_rewrite' ) );
@@ -285,6 +308,79 @@ class WC_MLM_Vendors {
 		}
 	}
 
+	function _show_toolbar( $show ) {
+
+		$vendor = WC_MLM_Vendors::get_vendor( get_current_user_id() );
+
+		if ( ! $vendor ) {
+			return $show;
+		}
+
+		return true;
+	}
+
+	/**
+	 * @param $wp_admin_bar WP_Admin_Bar
+	 */
+	function _add_to_toolbar( $wp_admin_bar ) {
+
+		$vendor = WC_MLM_Vendors::get_vendor( get_current_user_id() );
+
+		if ( ! $vendor ) {
+			return;
+		}
+
+		// Remove some
+		$wp_admin_bar->remove_menu( 'site-name' );
+		$wp_admin_bar->remove_menu( 'my-account' );
+		$wp_admin_bar->remove_menu( 'new-content' );
+		$wp_admin_bar->remove_node( 'search' );
+		$wp_admin_bar->remove_node( 'wp-logo' );
+
+		// Add parent
+		$wp_admin_bar->add_node( array(
+			'id'    => 'mlm_vendor_menu',
+			'title' => $vendor->name,
+			'href'  => '#',
+		) );
+
+		// Add Children
+		$wp_admin_bar->add_node( array(
+			'parent' => 'mlm_vendor_menu',
+			'id'     => 'mlm_vendor_menu_my_account',
+			'title'  => 'My Account',
+			'href'   => '/my-account',
+		) );
+
+		$wp_admin_bar->add_node( array(
+			'parent' => 'mlm_vendor_menu',
+			'id'     => 'mlm_vendor_menu_my_account_edit',
+			'title'  => 'Edit Account',
+			'href'   => '/my-account/edit-account',
+		) );
+
+		$wp_admin_bar->add_node( array(
+			'parent' => 'mlm_vendor_menu',
+			'id'     => 'mlm_vendor_menu_edit_vendor',
+			'title'  => 'Edit My ' . _wc_mlm_setting( 'vendor_verbage' ) . ' Settings',
+			'href'   => $vendor->get_admin_url( 'modify'),
+		) );
+
+		$wp_admin_bar->add_node( array(
+			'parent' => 'mlm_vendor_menu',
+			'id'     => 'mlm_vendor_menu_report',
+			'title'  => 'My Report',
+			'href'   => $vendor->get_admin_url(),
+		) );
+
+		$wp_admin_bar->add_node( array(
+			'parent' => 'mlm_vendor_menu',
+			'id'     => 'mlm_vendor_menu_shop',
+			'title'  => 'My Store',
+			'href'   => $vendor->get_shop_url(),
+		) );
+	}
+
 	/**
 	 * Adds the ability to access Vendor pages in the syntax /shop/{vendor}/.
 	 *
@@ -418,13 +514,31 @@ class WC_MLM_Vendors {
 	function _vendor_page_description() {
 
 		$vendor = $this->current_vendor_archive;
-
 		?>
 		<h2 class="vendor-title">
 			<?php echo $vendor->name; ?>
 		</h2>
 
+		<?php if ( $vendor->image ) : ?>
+			<div class="image">
+				<?php echo wp_get_attachment_image( $vendor->image, 'full' ); ?>
+			</div>
+		<?php endif; ?>
+
+		<?php if ( $vendor->description ) : ?>
+			<div class="description">
+				<?php echo wpautop( do_shortcode( $vendor->description ) ); ?>
+			</div>
+		<?php endif; ?>
+
 		<p class="vendor-meta">
+
+			<?php if ( $site = $vendor->website ) : ?>
+				<span class="site">
+					<a href="<?php echo $site; ?>"><?php echo $site; ?></a>
+				</span>
+			<?php endif; ?>
+
 			<?php if ( $phone = $vendor->phone ) : ?>
 				<span class="phone">
 					<?php echo $phone; ?>
