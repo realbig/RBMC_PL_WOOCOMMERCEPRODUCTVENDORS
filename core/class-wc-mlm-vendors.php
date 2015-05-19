@@ -52,99 +52,6 @@ class WC_MLM_Vendors {
 	}
 
 	private function _add_actions() {
-		add_action('pre_get_posts','users_own_attachments');
-
-		function users_own_attachments( $wp_query_obj )
-		{
-			global $current_user, $pagenow;
-
-			if( !is_a( $current_user, 'WP_User') )
-				return;
-
-			if( 'admin-ajax.php' != $pagenow )
-				return;
-
-			$wp_query_obj->set('author', $current_user->id );
-
-			return;
-		}
-
-		/** @param $cart WC_Cart */
-		function mysite_box_discount( ) {
-
-			global $woocommerce, $post;
-
-			if ( ! is_cart() ) {
-				return;
-			}
-
-			$cart = $woocommerce->cart;
-
-			$cart->discount_total = 1;
-
-			$discount = 0;
-			$vendor   = false;
-
-			foreach ( $cart->cart_contents as $i => $item ) {
-
-				if ( ! isset( $item['vendor'] ) || $item['vendor'] != get_current_user_id() ) {
-					continue;
-				}
-
-				if ( ! $vendor ) {
-					$vendor = WC_MLM_Vendors::get_vendor( get_current_user_id() );
-				}
-
-				if ( ! $vendor ) {
-					continue;
-				}
-
-				$discount = $discount + ( ( WC_MLM_Vendors::$commission_tiers[ $vendor->commission_tier ]['percentage'] / 100 ) * $item['line_subtotal'] );
-			}
-
-			if ( $discount > 0 ) {
-
-				$coupon    = new WC_Coupon( $vendor->name );
-				$coupon_ID = $coupon->id;
-
-				if ( ! $coupon->exists ) {
-
-					$coupon_ID = wp_insert_post( array(
-						'post_title'   => $vendor->name,
-						'post_content' => '',
-						'post_status'  => 'publish',
-						'post_author'  => 1,
-						'post_type'    => 'shop_coupon'
-					) );
-
-					update_post_meta( $coupon_ID, 'individual_use', 'no' );
-					update_post_meta( $coupon_ID, 'product_ids', '' );
-					update_post_meta( $coupon_ID, 'exclude_product_ids', '' );
-					update_post_meta( $coupon_ID, 'usage_limit', '1' );
-					update_post_meta( $coupon_ID, 'expiry_date', '' );
-					update_post_meta( $coupon_ID, 'apply_before_tax', 'yes' );
-					update_post_meta( $coupon_ID, 'free_shipping', 'no' );
-
-					// Type: fixed_cart, percent, fixed_product, percent_product
-					update_post_meta( $coupon_ID, 'discount_type', 'fixed_cart' );
-				}
-
-				if ( (float) $discount != (float) $coupon->coupon_amount ) {
-					update_post_meta( $coupon_ID, 'coupon_amount', $discount );
-				}
-
-				if ( ! in_array( sanitize_text_field( strtolower( $vendor->name ) ), $cart->applied_coupons ) ) {
-					$cart->add_discount( sanitize_text_field( $vendor->name ) );
-				}
-			} else {
-
-				if ( $cart->applied_coupons ) {
-					unset( $cart->applied_coupons );
-				}
-			}
-		}
-
-		add_action( 'wp', 'mysite_box_discount', 9999 );
 
 		// Flush permalinks on user register as vendor
 		add_action( 'set_user_role', array( $this, 'flush_permalinks' ), 10, 3 );
@@ -163,6 +70,10 @@ class WC_MLM_Vendors {
 		add_action( 'init', array( $this, '_add_rewrite' ) );
 		add_action( 'wp', array( $this, '_setup_wc_pages' ) );
 
+		add_action( 'wp', '_vendor_discount', 9999 );
+
+		add_action('pre_get_posts','_user_upload_own_images' );
+
 		// Style cart
 		add_filter( 'gettext', array( $this, '_add_cart_header_vendor' ), 10, 3 );
 		add_filter( 'woocommerce_cart_item_price', array( $this, '_add_cart_table_vendor' ), 10, 2 );
@@ -174,6 +85,94 @@ class WC_MLM_Vendors {
 		add_action( 'woocommerce_add_order_item_meta', array( $this, '_checkout_add_order_item_vendor_meta' ), 10, 2 );
 		add_action( 'woocommerce_checkout_order_processed', array( $this, '_checkout_order_add_vendor_meta' ) );
 		add_action( 'woocommerce_checkout_order_processed', array( $this, '_checkout_order_delete_coupon' ) );
+	}
+
+	function _vendor_discount( ) {
+
+		global $woocommerce, $post;
+
+		if ( ! is_cart() ) {
+			return;
+		}
+
+		$cart = $woocommerce->cart;
+
+		$cart->discount_total = 1;
+
+		$discount = 0;
+		$vendor   = false;
+
+		foreach ( $cart->cart_contents as $i => $item ) {
+
+			if ( ! isset( $item['vendor'] ) || $item['vendor'] != get_current_user_id() ) {
+				continue;
+			}
+
+			if ( ! $vendor ) {
+				$vendor = WC_MLM_Vendors::get_vendor( get_current_user_id() );
+			}
+
+			if ( ! $vendor ) {
+				continue;
+			}
+
+			$discount = $discount + ( ( WC_MLM_Vendors::$commission_tiers[ $vendor->commission_tier ]['percentage'] / 100 ) * $item['line_subtotal'] );
+		}
+
+		if ( $discount > 0 ) {
+
+			$coupon    = new WC_Coupon( $vendor->name );
+			$coupon_ID = $coupon->id;
+
+			if ( ! $coupon->exists ) {
+
+				$coupon_ID = wp_insert_post( array(
+					'post_title'   => $vendor->name,
+					'post_content' => '',
+					'post_status'  => 'publish',
+					'post_author'  => 1,
+					'post_type'    => 'shop_coupon'
+				) );
+
+				update_post_meta( $coupon_ID, 'individual_use', 'no' );
+				update_post_meta( $coupon_ID, 'product_ids', '' );
+				update_post_meta( $coupon_ID, 'exclude_product_ids', '' );
+				update_post_meta( $coupon_ID, 'usage_limit', '1' );
+				update_post_meta( $coupon_ID, 'expiry_date', '' );
+				update_post_meta( $coupon_ID, 'apply_before_tax', 'yes' );
+				update_post_meta( $coupon_ID, 'free_shipping', 'no' );
+
+				// Type: fixed_cart, percent, fixed_product, percent_product
+				update_post_meta( $coupon_ID, 'discount_type', 'fixed_cart' );
+			}
+
+			if ( (float) $discount != (float) $coupon->coupon_amount ) {
+				update_post_meta( $coupon_ID, 'coupon_amount', $discount );
+			}
+
+			if ( ! in_array( sanitize_text_field( strtolower( $vendor->name ) ), $cart->applied_coupons ) ) {
+				$cart->add_discount( sanitize_text_field( $vendor->name ) );
+			}
+		} else {
+
+			if ( $cart->applied_coupons ) {
+				unset( $cart->applied_coupons );
+			}
+		}
+	}
+
+	function _user_upload_own_images ( $wp_query_obj ) {
+		global $current_user, $pagenow;
+
+		if( !is_a( $current_user, 'WP_User') )
+			return;
+
+		if( 'admin-ajax.php' != $pagenow )
+			return;
+
+		$wp_query_obj->set('author', $current_user->id );
+
+		return;
 	}
 
 	function _add_cart_table_vendor( $price, $cart_item ) {

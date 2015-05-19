@@ -322,16 +322,7 @@ class WC_MLM_Reporting {
 	}
 
 	function _report_page_content( $content ) {
-
-		global $WC_MLM;
-
-		$post = get_post( $WC_MLM->pages['reporting'] );
-
-		if ( $post->post_content == $content ) {
-			return $this->page_content;
-		}
-
-		return $content;
+		return $this->page_content;
 	}
 
 	function _report_page_messages( $messages = array() ) {

@@ -29,4 +29,5 @@ if ( ! defined( 'ABSPATH' ) ) {
 			<input type="submit" class="button warning" name="vendor-frontend-delete" value="Delete <?php echo _wc_mlm_setting( 'vendor_verbage' ); ?>"
 			       onclick="return confirm('WARNING: You are about to DELETE this <?php echo strtolower( _wc_mlm_setting( 'vendor_verbage' ) ); ?>.\nThis cannot be done\n\nAre you sure?')"/>
 		</form>
+
 	</div>

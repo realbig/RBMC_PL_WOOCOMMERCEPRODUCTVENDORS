@@ -33,6 +33,9 @@ class WC_MLM_Vendor {
 		$this->website         = get_user_meta( $user_ID, '_vendor_website', true );
 		$this->phone           = get_user_meta( $user_ID, '_vendor_phone', true );
 		$this->image           = get_user_meta( $user_ID, '_vendor_image', true );
+
+		// Set some to false
+		$this->image = ! empty( $this->image ) ? $this->image : false;
 	}
 
 	private function _get_name() {
