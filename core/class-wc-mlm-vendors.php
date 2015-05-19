@@ -63,6 +63,9 @@ class WC_MLM_Vendors {
 		) );
 		add_action( 'woocommerce_process_product_meta', array( $this, '_save_disable_commission_field' ) );
 
+		// Shortcodes
+		add_shortcode( 'customer_shop_link', array( $this, '_sc_customer_shop_link' ) );
+
 		// Add extra user fields
 		add_action( 'edit_user_profile', array( $this, '_add_user_vendor_fields' ) );
 
@@ -92,6 +95,51 @@ class WC_MLM_Vendors {
 		add_action( 'woocommerce_add_order_item_meta', array( $this, '_checkout_add_order_item_vendor_meta' ), 10, 2 );
 		add_action( 'woocommerce_checkout_order_processed', array( $this, '_checkout_order_add_vendor_meta' ) );
 		add_action( 'woocommerce_checkout_order_processed', array( $this, '_checkout_order_delete_coupon' ) );
+	}
+
+	function _sc_customer_shop_link( $atts = array(), $content ) {
+
+		$atts = shortcode_atts( array(
+			'class' => 'button customer-shop-link',
+			'link' => get_permalink( wc_get_page_id( 'shop' ) ),
+		), $atts );
+
+		if ( ! $content ) {
+			$content = 'Shop Now!';
+		}
+
+		$html = "<a href=\"$atts[link]\" class=\"$atts[class]\">$content</a>";
+
+		$orders = get_posts( array(
+			'meta_key'    => '_customer_user',
+			'meta_value'  => get_current_user_id(),
+			'post_type'   => 'shop_order',
+			'numberposts' => - 1
+		) );
+
+		if ( ! $orders ) {
+			return $html;
+		}
+
+		$order = $orders[0];
+
+		$vendors = get_post_meta( $order->ID, '_vendors', true );
+
+		if ( count( $vendors ) !== 1 ) {
+			return $html;
+		}
+
+		$vendor = $vendors[0];
+
+		$vendor = WC_MLM_Vendors::get_vendor( $vendor );
+
+		if ( ! $vendor ) {
+			return $html;
+		}
+
+		$vendor_shop_link = $vendor->get_shop_url();
+
+		return str_replace( $atts['link'], $vendor_shop_link, $html );
 	}
 
 	function _show_disable_commission_field() {
