@@ -17,6 +17,7 @@ class WC_MLM_Report {
 	public $orders;
 	public $items;
 	public $products;
+	public $customers;
 	public $sales = 0;
 	public $commission = 0;
 	public $cos = 0;
@@ -35,6 +36,7 @@ class WC_MLM_Report {
 		$this->orders     = $this->_get_orders();
 		$this->items      = $this->_get_items();
 		$this->products   = $this->_get_products();
+		$this->customers = $this->_get_customers();
 
 		if ( empty( $this->items ) ) {
 			return;
@@ -62,15 +64,20 @@ class WC_MLM_Report {
 			'date_query'  => $this->date_query,
 		) );
 
-		$orders = get_posts( $args );
+		$order_posts = get_posts( $args );
+		$orders      = array();
 
-		if ( $this->type == 'vendor' && ! empty( $orders ) ) {
-			foreach ( $orders as $i => $order ) {
+		if ( $this->type == 'vendor' && ! empty( $order_posts ) ) {
+			foreach ( $order_posts as $i => $order ) {
 
 				$vendors = get_post_meta( $order->ID, '_vendors', true );
 
-				if ( ! is_array( $vendors ) || ! in_array( $this->vendor->ID, $vendors ) ) {
-					unset( $orders[ $i ] );
+				if ( is_array( $vendors ) && in_array( $this->vendor->ID, $vendors ) ) {
+
+					$orders[ $order->ID ] = array(
+						'order'    => new WC_Order( $order->ID ),
+						'customer' => get_post_meta( $order->ID, '_customer_user', true ),
+					);
 				}
 			}
 		}
@@ -82,9 +89,9 @@ class WC_MLM_Report {
 
 		$order_items = array();
 
-		foreach ( $this->orders as $_order ) {
+		foreach ( $this->orders as $ID => $_order ) {
 
-			$order = new WC_Order( $_order->ID );
+			$order = new WC_Order( $ID );
 			$items = $order->get_items();
 
 			foreach ( $items as $item ) {
@@ -93,7 +100,10 @@ class WC_MLM_Report {
 					continue;
 				}
 
-				$order_items[] = array_merge( $item, array( 'date' => $order->order_date ) );
+				$item = array_merge( $item, array( 'date' => $order->order_date, 'order' => $ID ) );
+
+				$this->orders[ $ID ]['items'][] = $item;
+				$order_items[]                  = $item;
 			}
 		}
 
@@ -111,10 +121,44 @@ class WC_MLM_Report {
 			if ( ! isset( $products[ $product_ID ] ) ) {
 				$product                 = get_post( $product_ID );
 				$products[ $product_ID ] = $product;
+				$this->orders[ $item['order'] ]['products'][ $product_ID ] = $product;
 			}
 		}
 
 		return $products;
+	}
+
+	private function _get_customers() {
+
+		$customers = array();
+		foreach ( $this->orders as $ID => $order ) {
+
+			if ( $order['customer'] ) {
+
+				if ( isset( $this->customers[ (int) $order['customer'] ] ) ) {
+					continue;
+				}
+
+				$customer = new WC_Customer( $order['customer'] );
+				$user = new WP_User( $order['customer'] );
+
+				$name = $user->data->display_name ? $user->data->display_name : false;
+				$name = $name ? $name : $user->data->user_nicename;
+				$name = $name ? $name : false;
+
+				$customer_info = array(
+					'customer' => $customer,
+					'user' => $user,
+					'name' => $name,
+					'ID' => $order['customer'],
+				);
+				$customers[ (int) $order['customer'] ] = $customer_info;
+
+				$this->orders[ $ID ]['customer'] = $customer_info;
+			}
+		}
+
+		return $customers;
 	}
 
 	private function _get_sales() {
