@@ -56,6 +56,13 @@ class WC_MLM_Vendors {
 		// Flush permalinks on user register as vendor
 		add_action( 'set_user_role', array( $this, 'flush_permalinks' ), 10, 3 );
 
+		// Add commission disable to products
+		add_action( 'woocommerce_product_options_general_product_data', array(
+			$this,
+			'_show_disable_commission_field'
+		) );
+		add_action( 'woocommerce_process_product_meta', array( $this, '_save_disable_commission_field' ) );
+
 		// Add extra user fields
 		add_action( 'edit_user_profile', array( $this, '_add_user_vendor_fields' ) );
 
@@ -70,9 +77,9 @@ class WC_MLM_Vendors {
 		add_action( 'init', array( $this, '_add_rewrite' ) );
 		add_action( 'wp', array( $this, '_setup_wc_pages' ) );
 
-		add_action( 'wp', '_vendor_discount', 9999 );
+		add_action( 'wp', array( $this, '_vendor_discount' ), 9999 );
 
-		add_action('pre_get_posts','_user_upload_own_images' );
+		add_action( 'pre_get_posts', array( $this, '_user_upload_own_images' ) );
 
 		// Style cart
 		add_filter( 'gettext', array( $this, '_add_cart_header_vendor' ), 10, 3 );
@@ -85,6 +92,38 @@ class WC_MLM_Vendors {
 		add_action( 'woocommerce_add_order_item_meta', array( $this, '_checkout_add_order_item_vendor_meta' ), 10, 2 );
 		add_action( 'woocommerce_checkout_order_processed', array( $this, '_checkout_order_add_vendor_meta' ) );
 		add_action( 'woocommerce_checkout_order_processed', array( $this, '_checkout_order_delete_coupon' ) );
+	}
+
+	function _show_disable_commission_field() {
+
+
+		global $woocommerce, $post;
+
+		?>
+		<div class="options_group">
+			<?php
+
+			woocommerce_wp_checkbox(
+				array(
+					'id' => '_wc_mlm_disable_commission',
+					'wrapper_class' => 'show_if_simple',
+					'label' => 'Disable Commission',
+					'description' => '',
+				)
+			);
+
+			?>
+		</div>
+	<?php
+	}
+
+	function _save_disable_commission_field( $post_ID ) {
+
+		if ( isset( $_POST['_wc_mlm_disable_commission'] ) ) {
+			update_post_meta( $post_ID, '_wc_mlm_disable_commission', 'yes' );
+		} else {
+			delete_post_meta( $post_ID, '_wc_mlm_disable_commission' );
+		}
 	}
 
 	function _vendor_discount( ) {
@@ -194,7 +233,11 @@ class WC_MLM_Vendors {
 
 	function _add_to_cart_vendor_input() {
 
-		if ( ! $this->current_vendor_archive ) {
+		global $product;
+
+		$disable_commission = get_post_meta( $product->id, '_wc_mlm_disable_commission', true );
+
+		if ( ! $this->current_vendor_archive || $disable_commission ) {
 			return;
 		}
 		?>
@@ -291,7 +334,11 @@ class WC_MLM_Vendors {
 	 */
 	function _filter_add_to_cart_link( $link ) {
 
-		if ( ! $this->current_vendor_archive ) {
+		global $product;
+
+		$disable_commission = get_post_meta( $product->id, '_wc_mlm_disable_commission', true );
+
+		if ( ! $this->current_vendor_archive || $disable_commission ) {
 			return $link;
 		}
 
