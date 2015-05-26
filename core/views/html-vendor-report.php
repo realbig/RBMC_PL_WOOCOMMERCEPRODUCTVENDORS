@@ -181,7 +181,7 @@ $sales_bonus = $vendor->get_sales_bonus( $date_query );
 
 						<td>
 							<?php
-							$percentage = (int) WC_MLM_Vendors::$commission_tiers[ $vendor->commission_tier ]['percentage'] / 100;
+							$percentage = (int) WC_MLM_Vendors::$commission_tiers[ $vendor->commission_tier ]['value'] / 100;
 							echo wc_price(
 								(int) $item['line_total'] * $percentage
 							);

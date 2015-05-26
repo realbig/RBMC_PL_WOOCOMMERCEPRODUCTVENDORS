@@ -25,9 +25,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 			<input type="hidden" name="_vendor_active" value="Active" />
 
-			<input type="submit" class="button" name="vendor-frontend-modify" value="Update <?php echo _wc_mlm_setting( 'vendor_verbage' ); ?>"/>
-			<input type="submit" class="button warning" name="vendor-frontend-delete" value="Delete <?php echo _wc_mlm_setting( 'vendor_verbage' ); ?>"
-			       onclick="return confirm('WARNING: You are about to DELETE this <?php echo strtolower( _wc_mlm_setting( 'vendor_verbage' ) ); ?>.\nThis cannot be done\n\nAre you sure?')"/>
+			<input type="submit" class="button" name="vendor-frontend-modify" value="Update <?php echo wc_mlm_setting( 'vendor_verbage' ); ?>"/>
+			<input type="submit" class="button warning" name="vendor-frontend-delete" value="Delete <?php echo wc_mlm_setting( 'vendor_verbage' ); ?>"
+			       onclick="return confirm('WARNING: You are about to DELETE this <?php echo strtolower( wc_mlm_setting( 'vendor_verbage' ) ); ?>.\nThis cannot be done\n\nAre you sure?')"/>
 		</form>
 
 	</div>

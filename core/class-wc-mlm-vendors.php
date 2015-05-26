@@ -29,24 +29,7 @@ class WC_MLM_Vendors {
 	function __construct() {
 
 		// Here for ability to use functions
-		self::$commission_tiers = array(
-			'1' => array(
-				'name'       => _wc_mlm_setting( 'commission_tier_1' ),
-				'percentage' => 30,
-			),
-			'2' => array(
-				'name'       => _wc_mlm_setting( 'commission_tier_2' ),
-				'percentage' => 20,
-			),
-			'3' => array(
-				'name'       => _wc_mlm_setting( 'commission_tier_3' ),
-				'percentage' => 15,
-			),
-			'4' => array(
-				'name'       => _wc_mlm_setting( 'commission_tier_4' ),
-				'percentage' => 10,
-			),
-		);
+		self::$commission_tiers = $this->_get_commission_tiers();
 
 		$this->_add_actions();
 	}
@@ -95,6 +78,25 @@ class WC_MLM_Vendors {
 		add_action( 'woocommerce_add_order_item_meta', array( $this, '_checkout_add_order_item_vendor_meta' ), 10, 2 );
 		add_action( 'woocommerce_checkout_order_processed', array( $this, '_checkout_order_add_vendor_meta' ) );
 		add_action( 'woocommerce_checkout_order_processed', array( $this, '_checkout_order_delete_coupon' ) );
+	}
+
+	function _get_commission_tiers() {
+
+		$tiers = wc_mlm_setting( 'commission_tiers' );
+
+		$tiers = explode( "\n", $tiers );
+
+		$final_tiers = array();
+		foreach ( $tiers as $i => $tier ) {
+
+			$tier_parts = explode( ':', $tier );
+			$final_tiers[ $i ] = array(
+				'label' => $tier_parts[0],
+				'value' => $tier_parts[1],
+			);
+		}
+
+		return $final_tiers;
 	}
 
 	function _sc_customer_shop_link( $atts = array(), $content ) {
@@ -203,7 +205,7 @@ class WC_MLM_Vendors {
 				continue;
 			}
 
-			$discount = $discount + ( ( WC_MLM_Vendors::$commission_tiers[ $vendor->commission_tier ]['percentage'] / 100 ) * $item['line_subtotal'] );
+			$discount = $discount + ( ( WC_MLM_Vendors::$commission_tiers[ $vendor->commission_tier ]['value'] / 100 ) * $item['line_subtotal'] );
 		}
 
 		if ( $discount > 0 ) {
@@ -273,7 +275,7 @@ class WC_MLM_Vendors {
 	function _add_cart_header_vendor( $translations, $text, $domain ) {
 
 		if ( $text == 'Price' && $domain == 'woocommerce' ) {
-			$translations .= '</th><th class="product-vendor">' . _wc_mlm_setting( 'vendor_verbage' );
+			$translations .= '</th><th class="product-vendor">' . wc_mlm_setting( 'vendor_verbage' );
 		}
 
 		return $translations;
@@ -413,7 +415,7 @@ class WC_MLM_Vendors {
 		}
 
 		$cart_item_data['vendor'] = $this->current_vendor_archive->ID;
-		$cart_item_data['commission'] = self::$commission_tiers[ $this->current_vendor_archive->commission_tier ]['percentage'];
+		$cart_item_data['commission'] = self::$commission_tiers[ $this->current_vendor_archive->commission_tier ]['value'];
 
 		return $cart_item_data;
 	}
@@ -558,7 +560,7 @@ class WC_MLM_Vendors {
 		$wp_admin_bar->add_node( array(
 			'parent' => 'mlm_vendor_menu',
 			'id'     => 'mlm_vendor_menu_edit_vendor',
-			'title'  => 'Edit My ' . _wc_mlm_setting( 'vendor_verbage' ) . ' Settings',
+			'title'  => 'Edit My ' . wc_mlm_setting( 'vendor_verbage' ) . ' Settings',
 			'href'   => $vendor->get_admin_url( 'modify'),
 		) );
 
@@ -757,7 +759,7 @@ class WC_MLM_Vendors {
 	 * @access private
 	 */
 	function _vendor_page_not_exist() {
-		wc_print_notice( 'This ' . _wc_mlm_setting( 'vendor_verbage' ) . ' does not exist.', 'error' );
+		wc_print_notice( 'This ' . wc_mlm_setting( 'vendor_verbage' ) . ' does not exist.', 'error' );
 	}
 
 	public static function is_vendor( $user_ID ) {

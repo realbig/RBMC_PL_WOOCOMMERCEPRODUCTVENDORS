@@ -116,7 +116,7 @@ class WC_MLM {
 		$capabilities['is_vendor'] = true;
 		$capabilities['upload_files'] = true;
 
-		add_role( 'vendor', _wc_mlm_setting( 'vendor_verbage' ), $capabilities );
+		add_role( 'vendor', wc_mlm_setting( 'vendor_verbage' ), $capabilities );
 	}
 
 	function _delete_vendor_role() {

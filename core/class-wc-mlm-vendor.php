@@ -311,7 +311,7 @@ class WC_MLM_Vendor {
 			update_user_meta( $referrer_user_ID, '_vendor_edit_messages', array(
 				array(
 					'type'    => 'success',
-					'message' => _wc_mlm_setting( 'vendor_verbage' ) . ' successfully deleted.',
+					'message' => wc_mlm_setting( 'vendor_verbage' ) . ' successfully deleted.',
 				),
 			) );
 
@@ -337,6 +337,6 @@ class WC_MLM_Vendor {
 	}
 
 	public function get_admin_url( $trail = false ) {
-		return get_bloginfo( 'url' ) . '/' . strtolower( _wc_mlm_setting( 'vendor_verbage' ) ) . '/' . $this->slug . ( $trail ? "/$trail" : '' );
+		return get_bloginfo( 'url' ) . '/' . strtolower( wc_mlm_setting( 'vendor_verbage' ) ) . '/' . $this->slug . ( $trail ? "/$trail" : '' );
 	}
 }

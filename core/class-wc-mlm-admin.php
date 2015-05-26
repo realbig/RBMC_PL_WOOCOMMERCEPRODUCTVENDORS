@@ -16,21 +16,9 @@ class WC_MLM_Admin {
 			'label'   => '"Vendor" Slug',
 			'default' => 'vendor',
 		),
-		'commission_tier_1' => array(
-			'label'   => 'Commission Tier 1 Label',
-			'default' => '(30%) Platinum',
-		),
-		'commission_tier_2' => array(
-			'label'   => 'Commission Tier 2 Label',
-			'default' => '(20%) Gold',
-		),
-		'commission_tier_3' => array(
-			'label'   => 'Commission Tier 3 Label',
-			'default' => '(15%) Silver',
-		),
-		'commission_tier_4' => array(
-			'label'   => 'Commission Tier 4 Label',
-			'default' => '(10%) Bronze',
+		'commission_tiers' => array(
+			'label' => 'Commission Tiers',
+			'default' => "(30%) Platinum:30\n(20%) Gold:20\n(15%) Silver:15\n(10%) Bronze:10",
 		),
 	);
 
@@ -73,42 +61,25 @@ class WC_MLM_Admin {
 	function _setting_output_vendor_verbage() {
 		?>
 		<input type="text" name="_wc_mlm_vendor_verbage" id="_wc_mlm_vendor_verbage"
-		       value="<?php echo esc_attr( _wc_mlm_setting( 'vendor_verbage' ) ); ?>"/>
+		       value="<?php echo esc_attr( wc_mlm_setting( 'vendor_verbage' ) ); ?>"/>
 	<?php
 	}
 
 	function _setting_output_vendor_slug() {
 		?>
 		<input type="text" name="_wc_mlm_vendor_slug" id="_wc_mlm_vendor_slug"
-		       value="<?php echo esc_attr( _wc_mlm_setting( 'vendor_slug' ) ); ?>"/>
+		       value="<?php echo esc_attr( wc_mlm_setting( 'vendor_slug' ) ); ?>"/>
 	<?php
 	}
 
-	function _setting_output_commission_tier_1() {
-		?>
-		<input type="text" name="_wc_mlm_commission_tier_1" id="_wc_mlm_commission_tier_1"
-		       value="<?php echo esc_attr( _wc_mlm_setting( 'commission_tier_1' ) ); ?>"/>
-	<?php
-	}
+	function _setting_output_commission_tiers() {
 
-	function _setting_output_commission_tier_2() {
+		$tiers = wc_mlm_setting( 'commission_tiers' );
 		?>
-		<input type="text" name="_wc_mlm_commission_tier_2" id="_wc_mlm_commission_tier_2"
-		       value="<?php echo esc_attr( _wc_mlm_setting( 'commission_tier_2' ) ); ?>"/>
-	<?php
-	}
-
-	function _setting_output_commission_tier_3() {
-		?>
-		<input type="text" name="_wc_mlm_commission_tier_3" id="_wc_mlm_commission_tier_3"
-		       value="<?php echo esc_attr( _wc_mlm_setting( 'commission_tier_3' ) ); ?>"/>
-	<?php
-	}
-
-	function _setting_output_commission_tier_4() {
-		?>
-		<input type="text" name="_wc_mlm_commission_tier_4" id="_wc_mlm_commission_tier_4"
-		       value="<?php echo esc_attr( _wc_mlm_setting( 'commission_tier_4' ) ); ?>"/>
+		<textarea rows="6" name="_wc_mlm_commission_tiers" class="regular-text"><?php echo $tiers; ?></textarea>
+		<p class="description">
+			Enter each tier on it's own line in the format <code>Tier Label:Value</code>.
+		</p>
 	<?php
 	}
 }

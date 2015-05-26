@@ -22,10 +22,10 @@ class WC_MLM_VendorModifications {
 				'label' => 'Commission Tier',
 			),
 			'active' => array(
-				'label' => _wc_mlm_setting( 'vendor_verbage' ) . ' not approved',
+				'label' => wc_mlm_setting( 'vendor_verbage' ) . ' not approved',
 			),
 			'delete' => array(
-				'label' => 'Delete ' . _wc_mlm_setting( 'vendor_verbage' ),
+				'label' => 'Delete ' . wc_mlm_setting( 'vendor_verbage' ),
 			),
 		);
 
@@ -43,8 +43,8 @@ class WC_MLM_VendorModifications {
 
 		$hook = add_submenu_page(
 			'woocommerce',
-			_wc_mlm_setting( 'vendor_verbage' ) . ' Updates',
-			_wc_mlm_setting( 'vendor_verbage' ) . ' Updates',
+			wc_mlm_setting( 'vendor_verbage' ) . ' Updates',
+			wc_mlm_setting( 'vendor_verbage' ) . ' Updates',
 			'manage_options',
 			'vendor-updates',
 			array( $this, '_page_output' )
@@ -88,7 +88,7 @@ class WC_MLM_VendorModifications {
 			if ( current_user_can( 'manage_options' ) ) {
 				foreach ( $submenu['woocommerce'] as $key => $menu_item ) {
 
-					if ( 0 === strpos( $menu_item[0], _wc_mlm_setting( 'vendor_verbage' ) . ' Updates' ) ) {
+					if ( 0 === strpos( $menu_item[0], wc_mlm_setting( 'vendor_verbage' ) . ' Updates' ) ) {
 
 						$this->_get_modifications();
 						$count = count( $this->modifications );

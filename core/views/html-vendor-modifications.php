@@ -11,7 +11,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 <div class="wrap">
 
-	<h2><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Modifications</h2>
+	<h2><?php echo wc_mlm_setting( 'vendor_verbage' ); ?> Modifications</h2>
 
 	<?php if ( ! $this->modifications && false ) : ?>
 		No pending modifications.

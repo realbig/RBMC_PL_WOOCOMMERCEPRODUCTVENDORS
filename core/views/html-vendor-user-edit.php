@@ -15,14 +15,14 @@ $can_view   = current_user_can( 'manage_options' ) || $user->ID == get_current_u
 $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descendant( get_current_user_id() );
 ?>
 
-<h3><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Settings</h3>
+<h3><?php echo wc_mlm_setting( 'vendor_verbage' ); ?> Settings</h3>
 
 <table class="form-table">
 
 	<?php if ( $admin_view ) : ?>
 		<tr>
 			<th>
-				<label for="_vendor_parent"><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Parent</label>
+				<label for="_vendor_parent"><?php echo wc_mlm_setting( 'vendor_verbage' ); ?> Parent</label>
 			</th>
 
 			<td>
@@ -68,7 +68,7 @@ $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descen
 
 		<tr>
 			<th>
-				<label for="_vendor_name"><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Name</label>
+				<label for="_vendor_name"><?php echo wc_mlm_setting( 'vendor_verbage' ); ?> Name</label>
 			</th>
 
 			<td>
@@ -79,7 +79,7 @@ $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descen
 
 		<tr>
 			<th>
-				<label for="_vendor_image"><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Image</label>
+				<label for="_vendor_image"><?php echo wc_mlm_setting( 'vendor_verbage' ); ?> Image</label>
 			</th>
 
 			<td>
@@ -170,7 +170,7 @@ $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descen
 
 		<tr>
 			<th>
-				<label for="_vendor_description"><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Description</label>
+				<label for="_vendor_description"><?php echo wc_mlm_setting( 'vendor_verbage' ); ?> Description</label>
 			</th>
 
 			<td>
@@ -181,7 +181,7 @@ $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descen
 
 		<tr>
 			<th>
-				<label for="_vendor_slug"><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Slug</label>
+				<label for="_vendor_slug"><?php echo wc_mlm_setting( 'vendor_verbage' ); ?> Slug</label>
 			</th>
 
 			<td>
@@ -197,7 +197,7 @@ $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descen
 
 		<tr>
 			<th>
-				<label for="_vendor_email"><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Email</label>
+				<label for="_vendor_email"><?php echo wc_mlm_setting( 'vendor_verbage' ); ?> Email</label>
 			</th>
 
 			<td>
@@ -208,7 +208,7 @@ $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descen
 
 		<tr>
 			<th>
-				<label for="_vendor_website"><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Website</label>
+				<label for="_vendor_website"><?php echo wc_mlm_setting( 'vendor_verbage' ); ?> Website</label>
 			</th>
 
 			<td>
@@ -219,7 +219,7 @@ $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descen
 
 		<tr>
 			<th>
-				<label for="_vendor_phone"><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Phone Number</label>
+				<label for="_vendor_phone"><?php echo wc_mlm_setting( 'vendor_verbage' ); ?> Phone Number</label>
 			</th>
 
 			<td>
@@ -233,7 +233,7 @@ $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descen
 	<?php if ( $admin_view ) : ?>
 		<tr>
 			<th>
-				<label for="_vendor_commission_tier"><?php echo _wc_mlm_setting( 'vendor_verbage' ); ?> Commission
+				<label for="_vendor_commission_tier"><?php echo wc_mlm_setting( 'vendor_verbage' ); ?> Commission
 					Tier</label>
 			</th>
 
@@ -242,7 +242,7 @@ $admin_view = current_user_can( 'manage_options' ) || $current_vendor->is_descen
 					<?php foreach ( WC_MLM_Vendors::$commission_tiers as $tier_ID => $tier ) : ?>
 						<option
 							value="<?php echo $tier_ID; ?>" <?php selected( $current_vendor->commission_tier, $tier_ID ); ?>>
-							<?php echo $tier['name']; ?>
+							<?php echo $tier['label']; ?>
 						</option>
 					<?php endforeach; ?>
 				</select>

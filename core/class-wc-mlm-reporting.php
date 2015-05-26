@@ -82,7 +82,7 @@ class WC_MLM_Reporting {
 		add_rewrite_tag( '%vendor_action%', '([^&]+)' );
 
 		add_rewrite_rule(
-			_wc_mlm_setting( 'vendor_slug' ) . "/([^/]+)/?([^/]+)?$",
+			wc_mlm_setting( 'vendor_slug' ) . "/([^/]+)/?([^/]+)?$",
 			'index.php?vendor=$matches[1]&vendor_action=$matches[2]&page_id=' . $WC_MLM->pages['reporting'],
 			'top'
 		);
@@ -172,7 +172,7 @@ class WC_MLM_Reporting {
 				$this->page_title .= ': Report';
 
 				$this->page_title = get_avatar( $vendor->ID, 300, '', '', array( 'class' => 'vendor-report-title-avatar' ) ) . $this->page_title;
-				$this->page_title .= '<br/><small><a href="' . $vendor->get_admin_url( 'modify' ) . '" class="button">(Modify ' . _wc_mlm_setting( 'vendor_verbage' ) . ')</a>
+				$this->page_title .= '<br/><small><a href="' . $vendor->get_admin_url( 'modify' ) . '" class="button">(Modify ' . wc_mlm_setting( 'vendor_verbage' ) . ')</a>
 </small>';
 
 				ob_start();
@@ -193,7 +193,7 @@ class WC_MLM_Reporting {
 						update_user_meta( get_current_user_id(), '_vendor_edit_messages', array(
 							array(
 								'type'    => 'success',
-								'message' => _wc_mlm_setting( 'vendor_verbage' ) . ' changes successful.',
+								'message' => wc_mlm_setting( 'vendor_verbage' ) . ' changes successful.',
 							)
 						) );
 
@@ -204,7 +204,7 @@ class WC_MLM_Reporting {
 						update_user_meta( get_current_user_id(), '_vendor_edit_messages', array(
 							array(
 								'type'    => 'notice',
-								'message' => _wc_mlm_setting( 'vendor_verbage' ) . ' changes sent for approval.',
+								'message' => wc_mlm_setting( 'vendor_verbage' ) . ' changes sent for approval.',
 							)
 						) );
 
@@ -239,7 +239,7 @@ class WC_MLM_Reporting {
 						update_user_meta( get_current_user_id(), '_vendor_edit_messages', array(
 							array(
 								'type'    => 'error',
-								'message' => _wc_mlm_setting( 'vendor_verbage' ) . ' deletion sent for approval.',
+								'message' => wc_mlm_setting( 'vendor_verbage' ) . ' deletion sent for approval.',
 							)
 						) );
 
@@ -304,7 +304,7 @@ class WC_MLM_Reporting {
 	function _cannot_view_vendor() {
 
 		echo '<div class="woocommerce">';
-		wc_print_notice( 'Cannot view this ' . strtolower( _wc_mlm_setting( 'vendor_verbage' ) ) . '.', 'error' );
+		wc_print_notice( 'Cannot view this ' . strtolower( wc_mlm_setting( 'vendor_verbage' ) ) . '.', 'error' );
 		echo '</div>';
 	}
 
@@ -341,11 +341,11 @@ class WC_MLM_Reporting {
 
 
 		$reports['vendors'] = array(
-			'title'   => _wc_mlm_setting( 'vendor_verbage' ) . 's',
+			'title'   => wc_mlm_setting( 'vendor_verbage' ) . 's',
 			'reports' => array(
 				"vendors" => array(
-					'title'       => _wc_mlm_setting( 'vendor_verbage' ) . 's',
-					'description' => 'A basic rundown of all ' . strtolower( _wc_mlm_setting( 'vendor_verbage' ) ) . 's.',
+					'title'       => wc_mlm_setting( 'vendor_verbage' ) . 's',
+					'description' => 'A basic rundown of all ' . strtolower( wc_mlm_setting( 'vendor_verbage' ) ) . 's.',
 					'callback'    => array( $this, '_vendor_report_output' )
 				),
 			),
@@ -421,7 +421,7 @@ class WC_MLM_Reporting {
 		require_once __DIR__ . '/class-wc-mlm-report-table.php';
 		$report_table = new WC_MLM_ReportTable( array(
 			'vendor'             => array(
-				'label'        => _wc_mlm_setting( 'vendor_verbage' ),
+				'label'        => wc_mlm_setting( 'vendor_verbage' ),
 				'type'         => 'name',
 				'order'        => 'char',
 				'orderdefault' => 'asc',

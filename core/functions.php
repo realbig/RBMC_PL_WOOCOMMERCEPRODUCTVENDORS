@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die();
 }
 
-function _wc_mlm_setting( $setting ) {
+function wc_mlm_setting( $setting ) {
 
 	require_once __DIR__ . '/class-wc-mlm-admin.php';
 
