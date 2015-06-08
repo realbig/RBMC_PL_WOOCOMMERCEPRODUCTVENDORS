@@ -63,7 +63,7 @@ class WC_MLM_Vendors {
 		add_action( 'init', array( $this, '_add_rewrite' ) );
 		add_action( 'wp', array( $this, '_setup_wc_pages' ) );
 
-		add_action( 'wp', array( $this, '_vendor_discount' ), 9999 );
+		add_action( 'woocommerce_calculate_totals', array( $this, '_vendor_discount' ), 1 );
 
 		add_action( 'pre_get_posts', array( $this, '_user_upload_own_images' ) );
 
@@ -89,10 +89,10 @@ class WC_MLM_Vendors {
 		$final_tiers = array();
 		foreach ( $tiers as $i => $tier ) {
 
-			$tier_parts = explode( ':', $tier );
+			$tier_parts        = explode( ':', $tier );
 			$final_tiers[ $i ] = array(
-				'label' => $tier_parts[0],
-				'value' => $tier_parts[1],
+				'label' => trim( $tier_parts[0] ),
+				'value' => trim( $tier_parts[1] ),
 			);
 		}
 
@@ -103,7 +103,7 @@ class WC_MLM_Vendors {
 
 		$atts = shortcode_atts( array(
 			'class' => 'button customer-shop-link',
-			'link' => get_permalink( wc_get_page_id( 'shop' ) ),
+			'link'  => get_permalink( wc_get_page_id( 'shop' ) ),
 		), $atts );
 
 		if ( ! $content ) {
@@ -155,10 +155,10 @@ class WC_MLM_Vendors {
 
 			woocommerce_wp_checkbox(
 				array(
-					'id' => '_wc_mlm_disable_commission',
+					'id'            => '_wc_mlm_disable_commission',
 					'wrapper_class' => 'show_if_simple',
-					'label' => 'Disable Commission',
-					'description' => '',
+					'label'         => 'Disable Commission',
+					'description'   => '',
 				)
 			);
 
@@ -176,90 +176,43 @@ class WC_MLM_Vendors {
 		}
 	}
 
-	function _vendor_discount( ) {
-
-		global $woocommerce, $post;
-
-		if ( ! is_cart() ) {
-			return;
-		}
-
-		$cart = $woocommerce->cart;
-
-		$cart->discount_total = 1;
+	/**
+	 * @param $cart WC_Cart
+	 */
+	function _vendor_discount( $cart ) {
 
 		$discount = 0;
-		$vendor   = false;
+		foreach ( $cart->cart_contents as $key => $item ) {
 
-		foreach ( $cart->cart_contents as $i => $item ) {
-
-			if ( ! isset( $item['vendor'] ) || $item['vendor'] != get_current_user_id() ) {
+			if ( ! isset( $item['vendor'] ) ||
+			     $item['vendor'] != get_current_user_id()
+			) {
 				continue;
 			}
 
-			if ( ! $vendor ) {
-				$vendor = WC_MLM_Vendors::get_vendor( get_current_user_id() );
-			}
-
-			if ( ! $vendor ) {
-				continue;
-			}
-
-			$discount = $discount + ( ( WC_MLM_Vendors::$commission_tiers[ $vendor->commission_tier ]['value'] / 100 ) * $item['line_subtotal'] );
+			$discount += (int) $item['line_subtotal'] * ( (int) $item['commission'] / 100 );
 		}
 
-		if ( $discount > 0 ) {
-
-			$coupon    = new WC_Coupon( $vendor->name );
-			$coupon_ID = $coupon->id;
-
-			if ( ! $coupon->exists ) {
-
-				$coupon_ID = wp_insert_post( array(
-					'post_title'   => $vendor->name,
-					'post_content' => '',
-					'post_status'  => 'publish',
-					'post_author'  => 1,
-					'post_type'    => 'shop_coupon'
-				) );
-
-				update_post_meta( $coupon_ID, 'individual_use', 'no' );
-				update_post_meta( $coupon_ID, 'product_ids', '' );
-				update_post_meta( $coupon_ID, 'exclude_product_ids', '' );
-				update_post_meta( $coupon_ID, 'usage_limit', '1' );
-				update_post_meta( $coupon_ID, 'expiry_date', '' );
-				update_post_meta( $coupon_ID, 'apply_before_tax', 'yes' );
-				update_post_meta( $coupon_ID, 'free_shipping', 'no' );
-
-				// Type: fixed_cart, percent, fixed_product, percent_product
-				update_post_meta( $coupon_ID, 'discount_type', 'fixed_cart' );
-			}
-
-			if ( (float) $discount != (float) $coupon->coupon_amount ) {
-				update_post_meta( $coupon_ID, 'coupon_amount', $discount );
-			}
-
-			if ( ! in_array( sanitize_text_field( strtolower( $vendor->name ) ), $cart->applied_coupons ) ) {
-				$cart->add_discount( sanitize_text_field( $vendor->name ) );
-			}
-		} else {
-
-			if ( $cart->applied_coupons ) {
-				unset( $cart->applied_coupons );
-			}
+		if ( $discount <= 0 ) {
+			return;
 		}
+
+		$cart->cart_contents_total = (int) $cart->cart_contents_total - $discount;
+		$cart->add_fee( 'Seller Discount', $discount );
 	}
 
-	function _user_upload_own_images ( $wp_query_obj ) {
+	function _user_upload_own_images( $wp_query_obj ) {
 		global $current_user, $pagenow;
 
-		if( !is_a( $current_user, 'WP_User') )
+		if ( ! is_a( $current_user, 'WP_User' ) ) {
 			return;
+		}
 
-		if( 'admin-ajax.php' != $pagenow )
+		if ( 'admin-ajax.php' != $pagenow ) {
 			return;
+		}
 
-		$wp_query_obj->set('author', $current_user->id );
+		$wp_query_obj->set( 'author', $current_user->id );
 
 		return;
 	}
@@ -414,7 +367,7 @@ class WC_MLM_Vendors {
 			$this->current_vendor_archive = self::get_vendor( $_POST['vendor'] );
 		}
 
-		$cart_item_data['vendor'] = $this->current_vendor_archive->ID;
+		$cart_item_data['vendor']     = $this->current_vendor_archive->ID;
 		$cart_item_data['commission'] = self::$commission_tiers[ $this->current_vendor_archive->commission_tier ]['value'];
 
 		return $cart_item_data;
@@ -561,7 +514,7 @@ class WC_MLM_Vendors {
 			'parent' => 'mlm_vendor_menu',
 			'id'     => 'mlm_vendor_menu_edit_vendor',
 			'title'  => 'Edit My ' . wc_mlm_setting( 'vendor_verbage' ) . ' Settings',
-			'href'   => $vendor->get_admin_url( 'modify'),
+			'href'   => $vendor->get_admin_url( 'modify' ),
 		) );
 
 		$wp_admin_bar->add_node( array(
@@ -687,12 +640,12 @@ class WC_MLM_Vendors {
 		return $permalink;
 	}
 
-	function _product_term_link_add_vendor( $termlink, $term, $taxonomy  ) {
+	function _product_term_link_add_vendor( $termlink, $term, $taxonomy ) {
 
 		global $wp_rewrite;
 
 		// Get taxonomy base
-		$base = $wp_rewrite->get_extra_permastruct($taxonomy);
+		$base = $wp_rewrite->get_extra_permastruct( $taxonomy );
 		$base = str_replace( "%$taxonomy%", '', $base );
 
 		// Get the current category
