@@ -130,6 +130,10 @@ class WC_MLM_Report {
 
 	private function _get_customers() {
 
+		if ( ! WC()->session ) {
+			return;
+		}
+
 		$customers = array();
 		foreach ( $this->orders as $ID => $order ) {
 
@@ -198,6 +202,15 @@ class WC_MLM_Report {
 
 	private function _get_cos() {
 
-		return count( $this->items ) * 5;
+		$cos = 0;
+		if ( ! empty( $this->items ) ) {
+			foreach ( $this->items as $item ) {
+
+				$item_cos = get_post_meta( $item['product_id'], '_wc_mlm_cos', true );
+				$cos += $item_cos ? (int) $item_cos : 5;
+			}
+		}
+
+		return $cos;
 	}
 }

@@ -42,9 +42,9 @@ class WC_MLM_Vendors {
 		// Add commission disable to products
 		add_action( 'woocommerce_product_options_general_product_data', array(
 			$this,
-			'_show_disable_commission_field'
+			'_show_custom_product_fields'
 		) );
-		add_action( 'woocommerce_process_product_meta', array( $this, '_save_disable_commission_field' ) );
+		add_action( 'woocommerce_process_product_meta', array( $this, '_save_custom_product_fields' ) );
 
 		// Shortcodes
 		add_shortcode( 'customer_shop_link', array( $this, '_sc_customer_shop_link' ) );
@@ -144,11 +144,7 @@ class WC_MLM_Vendors {
 		return str_replace( $atts['link'], $vendor_shop_link, $html );
 	}
 
-	function _show_disable_commission_field() {
-
-
-		global $woocommerce, $post;
-
+	function _show_custom_product_fields() {
 		?>
 		<div class="options_group">
 			<?php
@@ -162,17 +158,33 @@ class WC_MLM_Vendors {
 				)
 			);
 
+			woocommerce_wp_text_input(
+				array(
+					'id'            => '_wc_mlm_cos',
+					'wrapper_class' => 'show_if_simple',
+					'label'         => 'Cost of Sales',
+					'placeholder'   => '5',
+					'data_type' => 'price',
+				)
+			);
+
 			?>
 		</div>
 	<?php
 	}
 
-	function _save_disable_commission_field( $post_ID ) {
+	function _save_custom_product_fields( $post_ID ) {
 
 		if ( isset( $_POST['_wc_mlm_disable_commission'] ) ) {
 			update_post_meta( $post_ID, '_wc_mlm_disable_commission', 'yes' );
 		} else {
 			delete_post_meta( $post_ID, '_wc_mlm_disable_commission' );
+		}
+
+		if ( isset( $_POST['_wc_mlm_cos'] ) ) {
+			update_post_meta( $post_ID, '_wc_mlm_cos', $_POST['_wc_mlm_cos'] );
+		} else {
+			delete_post_meta( $post_ID, '_wc_mlm_cos' );
 		}
 	}
 
