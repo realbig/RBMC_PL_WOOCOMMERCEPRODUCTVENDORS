@@ -211,7 +211,19 @@ class WC_MLM_VendorModifications {
 
 		$modifications = array();
 		foreach ( $modifications_list as $hash ) {
+
 			$modifications[] = get_option( "_wc_mlm_vendor_modification_$hash" );
+
+			if ( empty( $modifications['type'] ) ||
+			     empty( $modifications['date'] ) ||
+			     empty( $modifications['instigator'] ) ||
+			     empty( $modifications['victim'] ) ||
+			     empty( $modifications['old_value'] ) ||
+			     empty( $modifications['new_value'] ) ||
+			     empty( $modifications['hash'] )
+			) {
+				self::delete_modification( $hash );
+			}
 		}
 
 		return $modifications;
