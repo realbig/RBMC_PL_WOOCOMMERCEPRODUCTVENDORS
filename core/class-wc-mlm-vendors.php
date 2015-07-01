@@ -238,7 +238,7 @@ class WC_MLM_Vendors {
 
 	function _add_cart_header_vendor( $translations, $text, $domain ) {
 
-		if ( ! is_cart() ) {
+		if ( ! function_exists( 'is_cart' ) || ! is_cart() ) {
 			return $translations;
 		}
 
