@@ -238,6 +238,10 @@ class WC_MLM_Vendors {
 
 	function _add_cart_header_vendor( $translations, $text, $domain ) {
 
+		if ( ! is_cart() ) {
+			return $translations;
+		}
+
 		if ( $text == 'Price' && $domain == 'woocommerce' ) {
 			$translations .= '</th><th class="product-vendor">' . wc_mlm_setting( 'vendor_verbage' );
 		}
