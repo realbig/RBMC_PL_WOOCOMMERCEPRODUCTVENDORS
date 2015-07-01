@@ -77,7 +77,6 @@ class WC_MLM_Vendors {
 		add_action( 'woocommerce_add_cart_item_data', array( $this, '_cart_item_add_vendor_meta' ) );
 		add_action( 'woocommerce_add_order_item_meta', array( $this, '_checkout_add_order_item_vendor_meta' ), 10, 2 );
 		add_action( 'woocommerce_checkout_order_processed', array( $this, '_checkout_order_add_vendor_meta' ) );
-		add_action( 'woocommerce_checkout_order_processed', array( $this, '_checkout_order_delete_coupon' ) );
 	}
 
 	function _get_commission_tiers() {

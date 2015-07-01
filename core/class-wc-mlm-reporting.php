@@ -18,22 +18,6 @@ class WC_MLM_Reporting {
 	}
 
 	private function _add_actions() {
-//		add_action('pre_get_posts','users_own_attachments');
-//
-//		function users_own_attachments( $wp_query_obj )
-//		{
-//			global $current_user, $pagenow;
-//
-//			if( !is_a( $current_user, 'WP_User') )
-//				return;
-//
-//			if( 'admin-ajax.php' != $pagenow )
-//				return;
-//
-//			$wp_query_obj->set('author', $current_user->ID );
-//
-//			return;
-//		}
 
 		// Setup pages
 		add_action( 'init', array( $this, '_setup_pages' ) );
@@ -49,6 +33,14 @@ class WC_MLM_Reporting {
 		// Add the sales leader admin reporting page
 		add_filter( 'woocommerce_admin_reports', array( $this, '_add_vendor_report' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, '_vendor_report_scripts' ) );
+
+		// Filter order results on order page
+		if ( isset( $_REQUEST['post_type'] ) &&
+		     $_REQUEST['post_type'] == 'shop_order' &&
+		     isset( $_REQUEST['wc_mlm_filter_vendor'] )
+		) {
+			add_filter( 'wp', array( $this, '_view_vendor_orders' ) );
+		}
 	}
 
 	function _setup_pages() {
@@ -339,7 +331,6 @@ class WC_MLM_Reporting {
 
 	function _add_vendor_report( $reports ) {
 
-
 		$reports['vendors'] = array(
 			'title'   => wc_mlm_setting( 'vendor_verbage' ) . 's',
 			'reports' => array(
@@ -454,7 +445,7 @@ class WC_MLM_Reporting {
 				$report = new WC_MLM_Report( 'vendor', $vendor, $date_query );
 
 				$report_table->add_row( array(
-					'vendor'             => $vendor->name,
+					'vendor'             => '<a href="' . admin_url( "edit.php?post_type=shop_order&wc_mlm_filter_vendor=$vendor->ID" ) . "\">{$vendor->name}</a>",
 					'total_sales'        => (int) $report->sales,
 					'commission_pending' => (int) $report->commission['pending'],
 					'commission_final'   => (int) $report->commission['final'],
@@ -491,6 +482,41 @@ class WC_MLM_Reporting {
 		$report_table->custom_footer( ob_get_clean() );
 
 		include_once __DIR__ . '/views/html-sales-leader-report.php';
+	}
+
+	function _view_vendor_orders() {
+
+		global $wp_query, $WC_MLM;
+
+		$vendor = $_REQUEST['wc_mlm_filter_vendor'];
+
+		if ( ! $vendor = WC_MLM_Vendors::get_vendor( $vendor ) ) {
+
+			$WC_MLM->admin->admin_notice( 'This vendor does not exist. No filtering applied.' );
+			return;
+		}
+
+		$WC_MLM->admin->admin_notice( "Viewing orders for <strong>{$vendor->name}</strong>.", 'notice' );
+
+		if ( ! empty( $wp_query->posts ) ) {
+
+			foreach ( $wp_query->posts as $i => $post ) {
+
+				$vendor_meta = get_post_meta( $post->ID, '_vendors', true );
+
+				if ( ! in_array( $vendor->ID, $vendor_meta ) ) {
+
+					unset( $wp_query->posts[ $i ] );
+
+					$wp_query->post_count  = $wp_query->post_count - 1;
+					$wp_query->found_posts = (string) ( (int) $wp_query->found_posts - 1 );
+
+					if ( $wp_query->post == $post ) {
+						$wp_query->post = null;
+					}
+				}
+			}
+		}
 	}
 
 	public static function show_vendor_messages( $messages = array() ) {

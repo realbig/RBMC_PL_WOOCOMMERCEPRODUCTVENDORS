@@ -7,6 +7,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class WC_MLM_Admin {
 
+	private $admin_notices = array();
+
 	public static $settings = array(
 		'vendor_verbage' => array(
 			'label'   => '"Vendor" Verbage',
@@ -34,6 +36,9 @@ class WC_MLM_Admin {
 
 		// Register settings
 		add_action( 'admin_init', array( $this, '_register_settings' ) );
+
+		// Admin notices
+		add_action( 'admin_notices', array( $this, '_admin_notices' ) );
 	}
 
 	function _add_settings_page() {
@@ -52,6 +57,23 @@ class WC_MLM_Admin {
 		foreach ( self::$settings as $setting_ID => $setting ) {
 			register_setting( 'wc-mlm-settings', "_wc_mlm_$setting_ID" );
 		}
+	}
+
+	function _admin_notices() {
+
+		if ( empty( $this->admin_notices ) ) {
+			return;
+		}
+
+		foreach ( $this->admin_notices as $notice ) :
+			?>
+			<div class="wc-mlm-admin-notice <?php echo $notice['type']; ?>">
+				<p>
+					<?php echo $notice['message']; ?>
+				</p>
+			</div>
+		<?php
+		endforeach;
 	}
 
 	function _settings_page_output() {
@@ -81,5 +103,13 @@ class WC_MLM_Admin {
 			Enter each tier on it's own line in the format <code>Tier Label:Value</code>.
 		</p>
 	<?php
+	}
+
+	public function admin_notice( $message, $type = 'error' ) {
+
+		$this->admin_notices[] = array(
+			'message' => $message,
+			'type' => $type,
+		);
 	}
 }
