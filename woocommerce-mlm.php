@@ -4,10 +4,10 @@
  * Description: Adds a multi-level-marketing strategy into WooCommerce for reporting purposes.
  * Author: Real Big Marketing
  * Author URI: http://realbigmarketing.com
- * Version: 0.1.4
+ * Version: 0.1.5
  */
 
-define( 'WC_MLM_VERSION', '0.1.4' );
+define( 'WC_MLM_VERSION', '0.1.5' );
 define( 'WC_MLM_PATH', plugin_dir_path( __FILE__ ) );
 define( 'WC_MLM_URL', plugins_url( '', __FILE__ ) );
 
