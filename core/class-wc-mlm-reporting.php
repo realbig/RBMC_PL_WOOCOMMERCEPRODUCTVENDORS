@@ -502,7 +502,7 @@ class WC_MLM_Reporting {
 
 			foreach ( $wp_query->posts as $i => $post ) {
 
-				$vendor_meta = get_post_meta( $post->ID, '_vendors', true );
+				$vendor_meta = (array) get_post_meta( $post->ID, '_vendors', true );
 
 				if ( ! in_array( $vendor->ID, $vendor_meta ) ) {
 
